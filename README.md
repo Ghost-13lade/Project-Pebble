@@ -42,7 +42,8 @@ Pebble knows *how* she/he is communicating and adjusts her personality engine ac
 <img width="454" height="580" alt="image" src="https://github.com/user-attachments/assets/2e83fd93-428d-40ff-8a6c-3c63f3f78ea4" />
 
 
-<img width="1125" height="2436" alt="image" src="https://github.com/user-attachments/assets/88a32c2a-ae80-489f-8204-1dacb6c0ca17" />
+<img width="454" height="970" alt="Screenshot 2026-02-16 at 3 57 43 PM" src="https://github.com/user-attachments/assets/49faf856-1389-4fc9-a3c0-74dbc3132b61" />
+
 
 
 
