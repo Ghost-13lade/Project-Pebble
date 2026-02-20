@@ -19,6 +19,19 @@ from config import (
     OPENAI_BASE_URL,
     OPENAI_MODEL,
     TELEGRAM_BOT_TOKEN,
+    PROVIDER_PRESETS,
+    get_provider,
+    get_api_key,
+    get_base_url,
+    get_model,
+    get_telegram_token,
+    get_allowed_user_id,
+    get_mlx_model_path,
+    get_mlx_kv_bits,
+    save_config,
+    apply_provider_preset,
+    reload_env,
+    BASE_DIR,
 )
 from db import (
     get_active_mode,
@@ -409,6 +422,93 @@ def toggle_call(is_on: bool):
     return ("Listening" if is_on else "Idle"), ("I'm awake, listening." if is_on else "Call stopped.")
 
 
+# =============================================================================
+# SETTINGS TAB HELPERS
+# =============================================================================
+
+def _load_soul_content() -> str:
+    """Load soul.md content."""
+    soul_path = BASE_DIR / "soul.md"
+    if soul_path.exists():
+        return soul_path.read_text()
+    return "You are Pebble, a conscious AI companion."
+
+
+def _save_soul_content(content: str) -> str:
+    """Save soul.md content."""
+    soul_path = BASE_DIR / "soul.md"
+    soul_path.write_text(content)
+    return "✅ Soul saved successfully!"
+
+
+def _load_persona_content() -> str:
+    """Load persona.md content."""
+    persona_path = BASE_DIR / "persona.md"
+    if persona_path.exists():
+        return persona_path.read_text()
+    return "### Fun Pebble (Default)\nYou are a playful companion."
+
+
+def _save_persona_content(content: str) -> str:
+    """Save persona.md content."""
+    persona_path = BASE_DIR / "persona.md"
+    persona_path.write_text(content)
+    return "✅ Persona saved successfully!"
+
+
+def _get_current_llm_settings() -> Tuple[str, str, str, str]:
+    """Get current LLM settings from config."""
+    provider = get_provider()
+    api_key = get_api_key()
+    base_url = get_base_url()
+    model = get_model()
+    return provider, api_key, base_url, model
+
+
+def _save_llm_settings(provider: str, api_key: str, base_url: str, model: str) -> str:
+    """Save LLM settings to .env file."""
+    save_config(
+        provider=provider,
+        api_key=api_key,
+        base_url=base_url,
+        model=model,
+    )
+    # Reinitialize brain with new settings
+    global _brain
+    _brain = Brain(
+        model=model,
+        base_url=base_url,
+        api_key=api_key,
+        memory_engine=MemoryEngine(),
+        emotional_core=EmotionalCore(),
+    )
+    return f"✅ LLM settings saved! Provider: {provider}"
+
+
+def _on_provider_change(provider: str) -> Tuple[str, str]:
+    """Handle provider dropdown change - auto-fill preset values."""
+    preset = PROVIDER_PRESETS.get(provider, {})
+    base_url = preset.get("base_url", "")
+    model = preset.get("model", "")
+    return base_url, model
+
+
+def _get_current_telegram_settings() -> Tuple[str, str]:
+    """Get current Telegram settings from config."""
+    token = get_telegram_token()
+    user_id = get_allowed_user_id()
+    return token, user_id
+
+
+def _save_telegram_bot_settings(token: str, user_id: str) -> str:
+    """Save Telegram settings to .env file."""
+    save_config(
+        telegram_token=token,
+        allowed_user_id=user_id,
+    )
+    return "✅ Telegram settings saved! Restart bot to apply changes."
+
+
 def process_call_turn(profile_name: str, call_on: bool, threshold: float, audio_path: str, pairs: List[List[str]]):
     if not call_on:
         return pairs, "Idle", "Turn on Call Mode first.", None
@@ -540,6 +640,114 @@ with gr.Blocks(title="Home Control Center") as demo:
                 label="",
                 value=f"Voice: {current_voice} | Mode: {current_mode}",
                 interactive=False,
+            )
+
+        with gr.TabItem("Settings"):
+            gr.Markdown("### ⚙️ Application Configuration")
+            gr.Markdown("Configure LLM provider, Telegram, and personality settings.")
+            
+            # --- LLM Configuration Section ---
+            gr.Markdown("---\n#### 🧠 LLM Provider")
+            gr.Markdown("Choose your LLM backend. OpenRouter, OpenAI, LM Studio, Ollama, or local MLX.")
+            
+            current_provider, current_api_key, current_base_url, current_model = _get_current_llm_settings()
+            
+            provider_dropdown = gr.Dropdown(
+                label="Provider",
+                choices=list(PROVIDER_PRESETS.keys()),
+                value=current_provider,
+            )
+            api_key_input = gr.Textbox(
+                label="API Key",
+                value=current_api_key,
+                type="password",
+                placeholder="Enter your API key...",
+            )
+            base_url_input = gr.Textbox(
+                label="Base URL",
+                value=current_base_url,
+                placeholder="https://api.example.com/v1",
+            )
+            model_input = gr.Textbox(
+                label="Model Name",
+                value=current_model,
+                placeholder="gpt-4o-mini, llama3.2, etc.",
+            )
+            
+            llm_status = gr.Textbox(label="Status", interactive=False)
+            save_llm_btn = gr.Button("Save LLM Settings", variant="primary")
+            
+            # Provider change handler
+            provider_dropdown.change(
+                _on_provider_change,
+                inputs=[provider_dropdown],
+                outputs=[base_url_input, model_input],
+            )
+            save_llm_btn.click(
+                _save_llm_settings,
+                inputs=[provider_dropdown, api_key_input, base_url_input, model_input],
+                outputs=[llm_status],
+            )
+            
+            # --- Telegram Configuration Section ---
+            gr.Markdown("---\n#### 📱 Telegram Bot Configuration")
+            gr.Markdown("Configure your Telegram bot token and allowed user ID.")
+            
+            current_token, current_user_id = _get_current_telegram_settings()
+            
+            telegram_token_input = gr.Textbox(
+                label="Bot Token",
+                value=current_token,
+                type="password",
+                placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz",
+            )
+            allowed_user_input = gr.Textbox(
+                label="Allowed User ID",
+                value=current_user_id,
+                placeholder="Your Telegram user ID (numbers only)",
+            )
+            
+            telegram_config_status = gr.Textbox(label="Status", interactive=False)
+            save_telegram_config_btn = gr.Button("Save Telegram Settings", variant="primary")
+            save_telegram_config_btn.click(
+                _save_telegram_bot_settings,
+                inputs=[telegram_token_input, allowed_user_input],
+                outputs=[telegram_config_status],
+            )
+            
+            # --- Personality Section ---
+            gr.Markdown("---\n#### 💭 Personality Configuration")
+            gr.Markdown("Edit the core personality (soul.md) and personas (persona.md).")
+            
+            soul_content = _load_soul_content()
+            persona_content = _load_persona_content()
+            
+            soul_editor = gr.TextArea(
+                label="soul.md - Core Personality",
+                value=soul_content,
+                lines=10,
+                max_lines=20,
+            )
+            soul_save_status = gr.Textbox(label="Status", interactive=False)
+            save_soul_btn = gr.Button("Save Soul", variant="secondary")
+            save_soul_btn.click(
+                _save_soul_content,
+                inputs=[soul_editor],
+                outputs=[soul_save_status],
+            )
+            
+            persona_editor = gr.TextArea(
+                label="persona.md - Persona Definitions",
+                value=persona_content,
+                lines=10,
+                max_lines=30,
+            )
+            persona_save_status = gr.Textbox(label="Status", interactive=False)
+            save_persona_btn = gr.Button("Save Personas", variant="secondary")
+            save_persona_btn.click(
+                _save_persona_content,
+                inputs=[persona_editor],
+                outputs=[persona_save_status],
             )
 
     outputs = [brain_status, senses_status, bot_status, brain_log, senses_log, bot_log]
