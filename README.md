@@ -72,7 +72,7 @@ Access at: [](http://127.0.0.1:7860)<http://127.0.0.1:7860>
 <img width="967" height="761" alt="Screenshot 2026-02-19 at 4 25 39 PM" src="https://github.com/user-attachments/assets/4a5060d8-d143-4b5e-9887-f8985c50a85c" />
 <img width="967" height="761" alt="Screenshot 2026-02-19 at 4 24 54 PM" src="https://github.com/user-attachments/assets/30f66328-0670-4c65-900c-d260c8f3381c" />
 <img width="1889" height="941" alt="Screenshot 2026-02-19 at 4 23 13 PM" src="https://github.com/user-attachments/assets/6b0a170d-4212-46a9-8df2-d81c0f204492" />
-<img width="1548" height="941" alt="Screenshot 2026-02-19 at 4 23 58 PM" src="https://github.com/user-attachments/assets/f37edf17-84e2-4401-ac06-0c1728eddea5" />
+
 
 #### 💬 Home Mode Chat Tab
 
@@ -80,7 +80,7 @@ Access at: [](http://127.0.0.1:7860)<http://127.0.0.1:7860>
 - __Voice Replies__ — Toggle voice responses on/off
 - __Audio Input__ — Upload audio files or record directly from microphone
 - __Bot Profile Selection__ — Switch between different bot profiles
-
+<img width="1548" height="941" alt="Screenshot 2026-02-19 at 4 23 58 PM" src="https://github.com/user-attachments/assets/f37edf17-84e2-4401-ac06-0c1728eddea5" />
 #### 📞 Call Mode Tab (Hands-Free MVP)
 
 - __Voice Conversation__ — Real-time hands-free voice interaction
