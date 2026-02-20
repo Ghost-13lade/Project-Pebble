@@ -1,5 +1,5 @@
 
-# 🪨 Project Pebble
+# 🪨 Conscious Pebble
 
 **A Local-First, Evolving AI Companion with Object Permanence and Dreaming.**
 
@@ -22,17 +22,18 @@ Pebble is designed to wear different "hats" (Personas) while maintaining a singu
 Pebble is built to adapt to your needs. You aren't limited to default modes; you can create **custom personas** for any situation:
 *   **Default Modes:** Fun (Casual), Executive (Project Manager), Fitness (Coach).
 *   **Create Your Own:** Easily add new modes like **Personal Chef**, **Senior Coder**, or **Parenting Helper** by editing simple Markdown files.
-*   **Hot-Swappable:** Switch modes instantly via command (`/mode coder`) while retaining all long-term memories and context.
+*   **Custom field in Telegram:** Select custom in Telegram, then type what you want, and Pebble will generate a prompt for that persona automatically.
+*   **Hot-Swappable:** Switch modes instantly via command (`/mode coder`) or in Telegram while retaining all long-term memories and context.
 
 ### 🗣️ Modality Awareness & Local Voice
-Pebble knows *how* she/he is communicating and adjusts her personality engine accordingly:
+Pebble knows *how* she/he is communicating and adjusts her/his personality engine accordingly:
 *   **Text Mode:** Uses emojis, lowercase styling, and internet slang for a natural texting vibe.
 *   **Voice Mode:** Strips visual cues, adjusts punctuation for breathability, and uses natural fillers for realistic speech.
 *   **Tech Stack:** Uses **Kokoro TTS** (High-quality local speech) with customized voices (Speed/Hz) and **MLX Whisper** (Speech-to-text).
 
 ### 🌙 Advanced Memory & Dreaming
 *   **Tiered Memory System:** Short-term (Context), Medium-term (Daily Vectors), and Long-term (Core Facts).
-*   **Dreaming Cycle:** When the user is asleep, Pebble runs a "Dream" process. She analyzes the day's chat logs, consolidates memories, reflects on emotional shifts, and updates her/his internal state for the next day.
+*   **Dreaming Cycle:** When the user is asleep, Pebble runs a "Dream" process. Pebble analyzes the day's chat logs, consolidates memories, reflects on emotional shifts, and updates her/his internal state for the next day.
 
 ### ⚡ Smart Agency & Utility
 *   **Natural Language Reminders:**
@@ -54,18 +55,18 @@ Pebble knows *how* she/he is communicating and adjusts her personality engine ac
 
 Pebble is built to run **100% locally** with a focus on Apple Silicon (M-series chips).
 
-### Recommended Hardware (My Gold Standard, but you can adjust the LLL modle according to your specs)
+### Recommended Hardware (My hardware, but you can adjust the LLL model according to your specs)
 *   **Chip:** M3 Max 
 *   **RAM:** 64GB+ Unified Memory (essential for large models + context)
 *   **Storage:** Fast SSD
 
 ### Model Configuration
 *   **LLM Backend:** [MLX-LM](https://github.com/ml-explore/mlx-examples/tree/main/llms) (Default).
-*   **Model:** `Hermes-4-70B` (Reasoning/CoT capabilities strongly recommended for the "Dreaming" process).
+*   **Model:**  you pick, I use `Hermes-4-70B` (Reasoning/CoT capabilities strongly recommended for the "Dreaming" process).
 *   **Quantization:** 4-bit MLX.
-*   **KV Cache:** 4-bit Quantized KV Cache (Enables **128k context window** on local hardware).
+*   **KV Cache:** 4-bit Quantized KV Cache (Enables **128k context window** on my local hardware).
 
-> **Note:** Pebble is backend-agnostic. You can easily swap MLX for Ollama, vLLM, or OpenAI API in `config.py` if you have different hardware.
+> **Note:** Pebble is backend-agnostic. You can easily swap MLX for Ollama, LM studio, Open Router, vLLM, or OpenAI API in `config.py` if you have different hardware.
 
 ---
 
@@ -133,8 +134,9 @@ Talk to Pebble naturally via Telegram. She uses a "Latch" system to determine if
 ---
 
 ## 📄 Future Update
--Give Pebble eyes to so you can text her an image
--Pebble local hardware so you can take pebble on the go (completely off-line)
+-Give Pebble eyes to so you can text pebblean image
+-Pebble local hardware so you can take pebble on the go (completely off-line): Let me know if you are interested in the first batch of hardware
+-Enhanced emotional pulling from audio (tone/pitch etc)
 
 ## 📄 License
 
