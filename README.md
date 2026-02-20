@@ -68,7 +68,7 @@ Access at: [](http://127.0.0.1:7860)<http://127.0.0.1:7860>
 - __Log Viewer__ — View the latest 50 lines of logs for each service
 - __One-Click Control__ — Start All / Stop All buttons for quick service management
 - 
-<img width="967" height="761" alt="Screenshot 2026-02-19 at 4 25 45 PM" src="https://github.com/user-attachments/assets/4b2ab3f3-1fed-4bdd-99c9-b0a45439388b" />
+
 <img width="967" height="761" alt="Screenshot 2026-02-19 at 4 25 39 PM" src="https://github.com/user-attachments/assets/4a5060d8-d143-4b5e-9887-f8985c50a85c" />
 <img width="967" height="761" alt="Screenshot 2026-02-19 at 4 24 54 PM" src="https://github.com/user-attachments/assets/30f66328-0670-4c65-900c-d260c8f3381c" />
 <img width="1889" height="941" alt="Screenshot 2026-02-19 at 4 23 13 PM" src="https://github.com/user-attachments/assets/6b0a170d-4212-46a9-8df2-d81c0f204492" />
