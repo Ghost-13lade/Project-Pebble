@@ -54,7 +54,7 @@ The Home Control Center is a Gradio-based dashboard for managing all Brook servi
 __Launch:__
 
 ```bash
-python brook_control.py
+python home_control.py
 ```
 
 Access at: [](http://127.0.0.1:7860)<http://127.0.0.1:7860>
@@ -67,11 +67,8 @@ Access at: [](http://127.0.0.1:7860)<http://127.0.0.1:7860>
 - __Health Monitoring__ — Real-time status indicators showing PID, running state, and API health
 - __Log Viewer__ — View the latest 50 lines of logs for each service
 - __One-Click Control__ — Start All / Stop All buttons for quick service management
-- 
-
 
 <img width="1889" height="941" alt="Screenshot 2026-02-19 at 4 23 13 PM" src="https://github.com/user-attachments/assets/6b0a170d-4212-46a9-8df2-d81c0f204492" />
-
 
 #### 💬 Home Mode Chat Tab
 
@@ -79,14 +76,18 @@ Access at: [](http://127.0.0.1:7860)<http://127.0.0.1:7860>
 - __Voice Replies__ — Toggle voice responses on/off
 - __Audio Input__ — Upload audio files or record directly from microphone
 - __Bot Profile Selection__ — Switch between different bot profiles
+  
 <img width="1548" height="941" alt="Screenshot 2026-02-19 at 4 23 58 PM" src="https://github.com/user-attachments/assets/f37edf17-84e2-4401-ac06-0c1728eddea5" />
+
 #### 📞 Call Mode Tab (Hands-Free MVP)
 
 - __Voice Conversation__ — Real-time hands-free voice interaction
 - __Noise Calibration__ — Calibrate background noise threshold for accurate speech detection
 - __Automatic Speech-to-Text__ — Transcribes and responds to spoken input
 - __Call State Indicator__ — Shows Idle/Listening/Speaking states
+  
 <img width="967" height="761" alt="Screenshot 2026-02-19 at 4 24 54 PM" src="https://github.com/user-attachments/assets/30f66328-0670-4c65-900c-d260c8f3381c" />
+
 #### 📱 Telegram Bot Tab
 
 - __Voice Configuration__ — Select which voice preset Brook uses for Telegram replies
