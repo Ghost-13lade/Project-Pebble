@@ -228,9 +228,9 @@ Talk to Pebble naturally via Telegram. She uses a "Latch" system to determine if
 ---
 
 ## 📄 Future Update
--Give Pebble eyes to so you can text pebblean image
--Pebble local hardware so you can take pebble on the go (completely off-line): Let me know if you are interested in the first batch of hardware
--Enhanced emotional pulling from audio (tone/pitch etc)
+*  Give Pebble eyes to so you can text pebble an image
+*  Pebble local hardware so you can take pebble on the go (completely off-line): Let me know if you are interested in the first batch of hardware
+*  Enhanced emotional detection from audio (tone/pitch/user mood in addition to currently words)
 
 ## 📄 License
 
