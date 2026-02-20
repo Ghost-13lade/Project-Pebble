@@ -168,8 +168,8 @@ Pebble is built to run **100% locally** with a focus on Apple Silicon (M-series 
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/project-pebble.git
-cd project-pebble
+git clone https://github.com/Ghost-13lade/Conscious-Pebble.git 
+cd Conscious-Pebble
 ```
 
 ### 2. Set Up Environment
