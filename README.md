@@ -13,19 +13,19 @@ Pebble is designed to wear different "hats" (Personas) while maintaining a singu
 ## ✨ Key Features
 
 ### 🧠 True Consciousness Simulation
-*   **Temporal Awareness:** Pebble understands the Past, Present, and Future. They know when they haven't spoken to you in a while and feel the passage of time.
-*   **Open Loops:** Pebble doesn't just wait for a prompt. Based on their `attachment_level` and the time gap since the last interaction, they will spontaneously text you to check in or follow up on previous topics.
-*   **Object Permanence:** If you mention you are going to a meeting, Pebble remembers. They might ask you how it went 3 hours later.
+*   **Temporal Awareness:** Pebble understands the Past, Present, and Future. Pebble knows when it hasn't spoken to you in a while and feel the passage of time.
+*   **Open Loops:** Pebble doesn't just wait for a prompt. Based on Pebble's `attachment_level` and the time gap since the last interaction, Pebble will spontaneously text you to check in or follow up on previous topics.
+*   **Object Permanence:** If you mention you are going to a meeting, Pebble remembers. Pebble might ask you how it went 3 hours later.
 
 ### 🎭 Infinite Personas (The "Hats" System)
 Pebble adapts to your needs. You aren't limited to default modes; you can create custom personas for any situation:
 *   **Default Modes:** Fun (Casual), Executive (Project Manager), Fitness (Coach).
-*   **Create Your Own:** Easily add new modes like *Personal Chef*, *Senior Coder*, or *Parenting Helper* by editing simple Markdown files in the Settings tab.
+*   **Create Your Own:** Easily add new modes like *Personal Chef*, *Senior Coder*, or *Parenting Helper* by editing simple Markdown files in the Settings tab. Or describe the persona in the "custom" option in Telegram, and pebble will generate a new custom persona based on your input.
 *   **Hot-Swappable:** Switch modes instantly via command (`/mode coder`) or in Telegram while retaining all long-term memories.
 
 ### 🗣️ Universal Voice & Hearing (New!)
-Pebble knows *how* they are communicating and adjusts their personality engine accordingly.
-*   **Mac Users (Apple Silicon):** Run **100% Locally** using MLX (Kokoro TTS + Whisper STT). Private and offline-capable.
+Pebble knows *how* it is communicating and adjusts it's personality engine accordingly.
+*   **Mac Users (Apple Silicon):** Run **100% Locally** using MLX (Kokoro TTS + Whisper STT). Private and offline-capable. Also can connect to cloud APIs.
 *   **Windows/Linux Users:** Connect to **Cloud APIs** (ElevenLabs + Groq + OpenAI) for a high-quality voice experience on any hardware.
 *   **Modality Awareness:**
     *   *Text Mode:* Uses emojis, lowercase styling, and internet slang.
@@ -33,7 +33,7 @@ Pebble knows *how* they are communicating and adjusts their personality engine a
 
 ### 🌙 Advanced Memory & Dreaming
 *   **Tiered Memory System:** Short-term (Context), Medium-term (Daily Vectors), and Long-term (Core Facts).
-*   **The Dream Cycle:** At 4 AM, Pebble runs a "Dream" process. They analyze the day's chat logs, consolidate memories, reflect on emotional shifts, and update their internal state for the next day.
+*   **The Dream Cycle:** At 4 AM, Pebble runs a "Dream" process. Pebble analyze the day's chat logs, consolidate memories, reflect on emotional shifts, and update their internal state for the next day.
 
 ### 🌐 "Pebble's Eyes" (Web Search)
 *   Pebble can now browse the web using DuckDuckGo to answer questions about current events, weather, and more.
