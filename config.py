@@ -155,6 +155,46 @@ def get_kokoro_model() -> str:
     return get_config("KOKORO_MODEL", "mlx-community/Kokoro-82M-bf16")
 
 
+def get_elevenlabs_api_key() -> str:
+    """Get the ElevenLabs API key for cloud TTS."""
+    return get_config("ELEVENLABS_API_KEY", "")
+
+
+def get_elevenlabs_voice_id() -> str:
+    """Get the ElevenLabs voice ID (default: Rachel)."""
+    return get_config("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")  # Rachel voice
+
+
+def get_tts_provider() -> str:
+    """Get the TTS provider: 'local' (MLX/Kokoro), 'elevenlabs' (Cloud), 'openai', or 'none'."""
+    return get_config("TTS_PROVIDER", "local")
+
+
+def get_stt_provider() -> str:
+    """Get the STT provider: 'local' (MLX Whisper), 'groq', or 'openai'."""
+    return get_config("STT_PROVIDER", "local")
+
+
+def get_groq_api_key() -> str:
+    """Get the Groq API key for cloud Whisper STT."""
+    return get_config("GROQ_API_KEY", "")
+
+
+def get_openai_tts_key() -> str:
+    """Get the OpenAI API key for TTS (falls back to main OPENAI_API_KEY)."""
+    return get_config("OPENAI_TTS_API_KEY", "") or get_api_key()
+
+
+def get_openai_tts_voice() -> str:
+    """Get the OpenAI TTS voice (alloy, echo, fable, onyx, nova, shimmer)."""
+    return get_config("OPENAI_TTS_VOICE", "alloy")
+
+
+def get_web_search_enabled() -> bool:
+    """Check if web search is enabled."""
+    return get_config("WEB_SEARCH_ENABLED", "true").lower() in ("true", "1", "yes")
+
+
 # =============================================================================
 # CONFIG SETTERS
 # =============================================================================

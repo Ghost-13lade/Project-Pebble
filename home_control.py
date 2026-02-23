@@ -32,6 +32,15 @@ from config import (
     apply_provider_preset,
     reload_env,
     BASE_DIR,
+    get_elevenlabs_api_key,
+    get_elevenlabs_voice_id,
+    get_tts_provider,
+    get_stt_provider,
+    get_groq_api_key,
+    get_openai_tts_key,
+    get_openai_tts_voice,
+    get_web_search_enabled,
+    save_env_value,
 )
 from db import (
     get_active_mode,
@@ -39,6 +48,7 @@ from db import (
     get_user_profile,
     init_db,
     log_chat,
+    get_recent_chat_logs,
 )
 from emotional_core import EmotionalCore
 from memory_engine import MemoryEngine
@@ -350,6 +360,56 @@ def _pairs_to_history(pairs: List[List[str]]) -> List[Dict[str, str]]:
     return messages
 
 
+def _load_chat_history_from_db(user_id: str, max_pairs: int = 10) -> List[List[str]]:
+    """
+    Load recent chat history from SQLite database.
+    Hard-limited to max_pairs (10 pairs = 20 messages) for context window safety.
+    """
+    print(f"[System] Loading last {max_pairs} conversation pairs from Memory DB...")
+    
+    # Get recent logs (we need 2x messages to form pairs)
+    logs = get_recent_chat_logs(user_id, limit=max_pairs * 2)
+    
+    if not logs:
+        print("[System] No previous chat history found in database")
+        return []
+    
+    # Convert to pairs format for Gradio Chatbot
+    pairs: List[List[str]] = []
+    current_pair: List[str] = ["", ""]
+    
+    for log in logs:
+        role = str(log.get("role", "")).lower()
+        content = str(log.get("content", ""))
+        
+        if role == "user":
+            if current_pair[0]:  # Already have a user message, start new pair
+                pairs.append(current_pair)
+                current_pair = ["", ""]
+            current_pair[0] = content
+        elif role == "assistant":
+            current_pair[1] = content
+            if current_pair[0]:  # Have both user and assistant
+                pairs.append(current_pair)
+                current_pair = ["", ""]
+    
+    # Don't forget any remaining partial pair
+    if current_pair[0] or current_pair[1]:
+        pairs.append(current_pair)
+    
+    # Limit to max_pairs
+    pairs = pairs[-max_pairs:]
+    
+    print(f"[System] Loaded {len(pairs)} conversation pairs from Memory DB")
+    return pairs
+
+
+def _load_history_on_start(profile_name: str) -> List[List[str]]:
+    """Load chat history when user selects a profile."""
+    user_id = _profile_user_id(profile_name)
+    return _load_chat_history_from_db(user_id, max_pairs=10)
+
+
 def _reply(profile_name: str, user_text: str, pairs: List[List[str]], voice_on: str):
     text = str(user_text or "").strip()
     if not text:
@@ -591,7 +651,7 @@ with gr.Blocks(title="Home Control Center") as demo:
                 chat_in = gr.Textbox(label="Type message", lines=2)
                 send_btn = gr.Button("Send")
                 clear_btn = gr.Button("Clear")
-            voice_out = gr.Audio(label="Voice Reply File")
+            voice_out = gr.Audio(label="Voice Reply File", autoplay=True)
             gr.Markdown("### Audio File Input")
             audio_in = gr.Audio(label="Upload or record audio", sources=["upload", "microphone"], type="filepath")
             send_audio_btn = gr.Button("Send Audio")
@@ -609,7 +669,7 @@ with gr.Blocks(title="Home Control Center") as demo:
             process_turn_btn = gr.Button("Process Turn")
             call_chat = gr.Chatbot(label="Call Transcript", height=260)
             call_chat_state = gr.State([])
-            call_voice_out = gr.Audio(label="Pebble Voice Reply")
+            call_voice_out = gr.Audio(label="Pebble Voice Reply", autoplay=True)
             gr.Markdown("If browser says no microphone found, use uploaded clips until mic permission is enabled.")
 
         with gr.TabItem("Telegram Bot"):
@@ -749,6 +809,152 @@ with gr.Blocks(title="Home Control Center") as demo:
                 inputs=[persona_editor],
                 outputs=[persona_save_status],
             )
+            
+            # --- Voice/TTS Configuration Section ---
+            gr.Markdown("---\n#### 🎤 Voice Configuration (TTS)")
+            gr.Markdown("Configure text-to-speech. Use ElevenLabs for Windows/Linux, or Local for Mac with MLX.")
+            
+            # Get current TTS settings
+            current_tts_provider = get_tts_provider()
+            current_elevenlabs_key = get_elevenlabs_api_key()
+            current_elevenlabs_voice = get_elevenlabs_voice_id()
+            
+            tts_provider_dropdown = gr.Dropdown(
+                label="TTS Provider",
+                choices=["local", "elevenlabs", "openai", "none"],
+                value=current_tts_provider,
+                info="Local = Mac only (MLX/Kokoro). ElevenLabs/OpenAI = Cloud (Windows/Linux/Mac). None = Text only."
+            )
+            
+            elevenlabs_key_input = gr.Textbox(
+                label="ElevenLabs API Key",
+                value=current_elevenlabs_key,
+                type="password",
+                placeholder="xi-xxxxxxxxxx...",
+                info="Get your key from elevenlabs.io"
+            )
+            
+            elevenlabs_voice_input = gr.Textbox(
+                label="ElevenLabs Voice ID",
+                value=current_elevenlabs_voice,
+                placeholder="21m00Tcm4TlvDq8ikWAM",
+                info="Default: Rachel. Find voice IDs in ElevenLabs dashboard."
+            )
+            
+            tts_status = gr.Textbox(label="Status", interactive=False)
+            save_tts_btn = gr.Button("Save Voice Settings", variant="primary")
+            
+            def _save_tts_settings(provider: str, api_key: str, voice_id: str) -> str:
+                """Save TTS settings to .env file."""
+                save_env_value("TTS_PROVIDER", provider)
+                if api_key:
+                    save_env_value("ELEVENLABS_API_KEY", api_key)
+                if voice_id:
+                    save_env_value("ELEVENLABS_VOICE_ID", voice_id)
+                reload_env()
+                print(f"[Voice] TTS settings saved - Provider: {provider}")
+                return f"✅ Voice settings saved! Provider: {provider}"
+            
+            save_tts_btn.click(
+                _save_tts_settings,
+                inputs=[tts_provider_dropdown, elevenlabs_key_input, elevenlabs_voice_input],
+                outputs=[tts_status],
+            )
+            
+            # --- OpenAI TTS Configuration ---
+            gr.Markdown("##### OpenAI TTS (Alternative Cloud)")
+            current_openai_tts_voice = get_openai_tts_voice()
+            
+            openai_tts_voice_dropdown = gr.Dropdown(
+                label="OpenAI TTS Voice",
+                choices=["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
+                value=current_openai_tts_voice,
+                info="Select a voice for OpenAI TTS (used when TTS Provider = openai)"
+            )
+            
+            openai_tts_status = gr.Textbox(label="Status", interactive=False)
+            save_openai_tts_btn = gr.Button("Save OpenAI Voice", variant="secondary")
+            
+            def _save_openai_tts_voice(voice: str) -> str:
+                save_env_value("OPENAI_TTS_VOICE", voice)
+                reload_env()
+                return f"✅ OpenAI TTS voice saved: {voice}"
+            
+            save_openai_tts_btn.click(
+                _save_openai_tts_voice,
+                inputs=[openai_tts_voice_dropdown],
+                outputs=[openai_tts_status],
+            )
+            
+            # --- Hearing/STT Configuration Section ---
+            gr.Markdown("---\n#### 👂 Hearing Configuration (STT)")
+            gr.Markdown("Configure speech-to-text. Use Groq for Windows/Linux (fast, free tier), or Local for Mac with MLX.")
+            
+            current_stt_provider = get_stt_provider()
+            current_groq_key = get_groq_api_key()
+            
+            stt_provider_dropdown = gr.Dropdown(
+                label="STT Provider",
+                choices=["local", "groq", "openai"],
+                value=current_stt_provider,
+                info="Local = Mac only (MLX Whisper). Groq = Cloud (fast, free tier). OpenAI = Cloud."
+            )
+            
+            groq_key_input = gr.Textbox(
+                label="Groq API Key",
+                value=current_groq_key,
+                type="password",
+                placeholder="gsk_...",
+                info="Get your key from console.groq.com"
+            )
+            
+            stt_status = gr.Textbox(label="Status", interactive=False)
+            save_stt_btn = gr.Button("Save Hearing Settings", variant="primary")
+            
+            def _save_stt_settings(provider: str, api_key: str) -> str:
+                """Save STT settings to .env file."""
+                save_env_value("STT_PROVIDER", provider)
+                if api_key:
+                    save_env_value("GROQ_API_KEY", api_key)
+                reload_env()
+                print(f"[Voice] STT settings saved - Provider: {provider}")
+                return f"✅ Hearing settings saved! Provider: {provider}"
+            
+            save_stt_btn.click(
+                _save_stt_settings,
+                inputs=[stt_provider_dropdown, groq_key_input],
+                outputs=[stt_status],
+            )
+            
+            # --- Web Search Configuration Section ---
+            gr.Markdown("---\n#### 🔍 Web Search")
+            gr.Markdown("Enable Pebble to search the web for current information.")
+            
+            current_web_search = "enabled" if get_web_search_enabled() else "disabled"
+            
+            web_search_toggle = gr.Radio(
+                label="Web Search",
+                choices=["enabled", "disabled"],
+                value=current_web_search,
+                info="When enabled, Pebble can search for current events, prices, news, etc."
+            )
+            
+            web_search_status = gr.Textbox(label="Status", interactive=False)
+            save_web_search_btn = gr.Button("Save Web Search Setting", variant="secondary")
+            
+            def _save_web_search_setting(enabled: str) -> str:
+                value = "true" if enabled == "enabled" else "false"
+                save_env_value("WEB_SEARCH_ENABLED", value)
+                reload_env()
+                status = "enabled" if enabled == "enabled" else "disabled"
+                print(f"[Search] Web search {status}")
+                return f"✅ Web search {status}!"
+            
+            save_web_search_btn.click(
+                _save_web_search_setting,
+                inputs=[web_search_toggle],
+                outputs=[web_search_status],
+            )
 
     outputs = [brain_status, senses_status, bot_status, brain_log, senses_log, bot_log]
     demo.load(refresh, outputs=outputs)
@@ -790,6 +996,13 @@ with gr.Blocks(title="Home Control Center") as demo:
         inputs=[telegram_voice_dropdown, telegram_mode_radio],
         outputs=[telegram_status, current_settings_display],
     )
+
+    # Profile change handler - load chat history when profile changes
+    profile.change(
+        _load_history_on_start,
+        inputs=[profile],
+        outputs=[chat],
+    ).then(lambda c: c, inputs=[chat], outputs=[state])
 
 
 demo.launch(server_name="127.0.0.1", server_port=7860)

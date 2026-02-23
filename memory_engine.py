@@ -34,10 +34,12 @@ class MemoryEngine:
         vector = self.embedder.encode(text, convert_to_numpy=True, normalize_embeddings=True)
         return vector.tolist()
 
-    def retrieve_relevant_context(self, query: str, user_id: str, k: int = 3) -> str:
+    def retrieve_relevant_context(self, query: str, user_id: str, k: int = 5) -> str:
         if not query.strip():
+            print("[Memory Engine] Empty query, returning no context")
             return "[Past Related Events]: None\n[Relevant Facts]: None"
 
+        print(f"[Memory Engine] Searching for relevant context (k={k}) for user: {user_id}")
         query_embedding = [self._embed(query)]
 
         event_results = self.daily_journals.query(
@@ -54,10 +56,33 @@ class MemoryEngine:
         events = (event_results.get("documents") or [[]])[0]
         facts = (fact_results.get("documents") or [[]])[0]
 
+        # Verbose logging of retrieval results
+        print(f"[Memory Engine] Found {len(events)} events and {len(facts)} facts from vector search")
+        
+        # Fallback: if no results found, try without user filter to get any memories
+        if not events and not facts:
+            print("[Memory Engine] No user-specific memories found, attempting broader search...")
+            try:
+                broader_event_results = self.daily_journals.query(
+                    query_embeddings=query_embedding,
+                    n_results=2,
+                )
+                broader_fact_results = self.facts_and_goals.query(
+                    query_embeddings=query_embedding,
+                    n_results=2,
+                )
+                events = (broader_event_results.get("documents") or [[]])[0] or events
+                facts = (broader_fact_results.get("documents") or [[]])[0] or facts
+                print(f"[Memory Engine] Broader search found {len(events)} events and {len(facts)} facts")
+            except Exception as e:
+                print(f"[Memory Engine] Broader search failed: {e}")
+
         events_block = "\n- " + "\n- ".join(events) if events else " None"
         facts_block = "\n- " + "\n- ".join(facts) if facts else " None"
 
-        return f"[Past Related Events]:{events_block}\n[Relevant Facts]:{facts_block}"
+        result = f"[Past Related Events]:{events_block}\n[Relevant Facts]:{facts_block}"
+        print(f"[Memory Engine] Returning context ({len(result)} chars)")
+        return result
 
     def archive_day(self, summary_text: str, date: str | date_type, user_id: str) -> None:
         if not summary_text.strip():

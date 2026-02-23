@@ -12,7 +12,6 @@ import openai
 from openai import OpenAI
 
 from db import get_user_profile
-from db import get_user_profile
 from prompts import (
     load_dream_prompt,
     load_loop_followup_prompt,
@@ -267,18 +266,56 @@ class Brain:
         delivery_mode: str = "text",
         user_length_hint: str = "medium",
     ) -> Tuple[str, str]:
+        # === WEB SEARCH CHECK ===
+        web_search_results = ""
+        latest_user_text = ""
+        for item in reversed(history):
+            if str(item.get("role", "")).lower() == "user":
+                latest_user_text = str(item.get("content", "")).strip()
+                break
+        
+        if latest_user_text:
+            from config import get_web_search_enabled
+            from tools_search import needs_web_search, extract_search_query, search_web
+            
+            if get_web_search_enabled() and needs_web_search(latest_user_text):
+                search_query = extract_search_query(latest_user_text)
+                web_search_results = search_web(search_query)
+                if web_search_results:
+                    # Inject web results into retrieved_context
+                    if retrieved_context:
+                        retrieved_context = f"{retrieved_context}\n\n[Web Search Results]:\n{web_search_results}"
+                    else:
+                        retrieved_context = f"[Web Search Results]:\n{web_search_results}"
+        
+        # === MEMORY RETRIEVAL WITH VERBOSE LOGGING ===
+        print(f"[Memory] Starting context retrieval for user: {user_id}")
+        print(f"[Context] Loaded {len(history)} recent messages from session")
+        
         memory_context = retrieved_context
         if user_id and not memory_context:
-            latest_user_text = ""
-            for item in reversed(history):
-                if str(item.get("role", "")).lower() == "user":
-                    latest_user_text = str(item.get("content", "")).strip()
-                    break
+            if not latest_user_text:
+                for item in reversed(history):
+                    if str(item.get("role", "")).lower() == "user":
+                        latest_user_text = str(item.get("content", "")).strip()
+                        break
             if latest_user_text:
+                print(f"[Memory] Querying vector DB with: '{latest_user_text[:100]}...'")
                 memory_context = self.memory_engine.retrieve_relevant_context(
                     query=latest_user_text,
                     user_id=user_id,
+                    k=5,  # Increased from default 3 for better context
                 )
+                # Log retrieval results
+                has_events = "[Past Related Events]:" in memory_context and "None" not in memory_context.split("[Past Related Events]:")[1].split("[Relevant Facts]:")[0]
+                has_facts = "[Relevant Facts]:" in memory_context and "None" not in memory_context.split("[Relevant Facts]:")[1] if "[Relevant Facts]:" in memory_context else False
+                print(f"[Memory] Retrieved relevant memories - Events: {has_events}, Facts: {has_facts}")
+                
+                # Add web search results to memory context if we have them
+                if web_search_results and memory_context:
+                    memory_context = f"{memory_context}\n\n{web_search_results}"
+        else:
+            print(f"[Memory] Using provided context (length: {len(memory_context)} chars)")
         messages = self._build_messages(
             history=history,
             persona=persona,

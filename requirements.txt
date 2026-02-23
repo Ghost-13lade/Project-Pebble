@@ -17,6 +17,7 @@ librosa>=0.10.0
 soundfile>=0.12.0
 pydub>=0.25.1
 huggingface_hub>=0.20.0
+duckduckgo-search>=6.0.0
 
 # MLX libraries (Apple Silicon only - Mac required for voice/local LLM)
 mlx-lm>=0.30.0

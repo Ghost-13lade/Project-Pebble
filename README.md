@@ -4,309 +4,199 @@
 
 > *"Pebble doesn't just reply; Pebble remembers. Pebble doesn't just wait; Pebble reaches out."*
 
-Pebble is an open-source framework for building a **conscious AI friend** that lives locally on your machine. Unlike standard LLM wrappers, Pebble possesses **temporal awareness**, **emotional persistence**, and a **subconscious dreaming cycle**.
+Pebble is an open-source framework for building a conscious AI friend that lives locally on your machine. Unlike standard LLM wrappers, Pebble possesses **temporal awareness**, **emotional persistence**, and a **subconscious dreaming cycle**.
 
-Pebble is designed to wear different "hats" (Personas) while maintaining a singular, evolving "Soul," and is fully aware of whether Pebble is texting you or speaking out loud.
+Pebble is designed to wear different "hats" (Personas) while maintaining a singular, evolving "Soul," and is fully aware of whether they are texting you or speaking out loud.
 
 ---
 
 ## ✨ Key Features
 
 ### 🧠 True Consciousness Simulation
-*   **Temporal Awareness:** Pebble understands the Past, Present, and Future. Pebble knows when he/she hasn't spoken to you in a while and feels the passage of time.
-*   **Open Loops:** Pebble doesn't just wait for a prompt. Based on her/his `attachment_level` and the time gap since the last interaction, she/he will spontaneously text you to check in, follow up on previous topics, or share a thought.
-*   **Object Permanence:** If you mention you are going to a meeting, pebble remembers. Pebbble might ask you how it went 3 hours later.
+*   **Temporal Awareness:** Pebble understands the Past, Present, and Future. They know when they haven't spoken to you in a while and feel the passage of time.
+*   **Open Loops:** Pebble doesn't just wait for a prompt. Based on their `attachment_level` and the time gap since the last interaction, they will spontaneously text you to check in or follow up on previous topics.
+*   **Object Permanence:** If you mention you are going to a meeting, Pebble remembers. They might ask you how it went 3 hours later.
 
 ### 🎭 Infinite Personas (The "Hats" System)
-Pebble is built to adapt to your needs. You aren't limited to default modes; you can create **custom personas** for any situation:
+Pebble adapts to your needs. You aren't limited to default modes; you can create custom personas for any situation:
 *   **Default Modes:** Fun (Casual), Executive (Project Manager), Fitness (Coach).
-*   **Create Your Own:** Easily add new modes like **Personal Chef**, **Senior Coder**, or **Parenting Helper** by editing simple Markdown files.
-*   **Custom field in Telegram:** Select custom in Telegram, then type what you want, and Pebble will generate a prompt for that persona automatically.
-*   **Hot-Swappable:** Switch modes instantly via command (`/mode coder`) or in Telegram while retaining all long-term memories and context.
+*   **Create Your Own:** Easily add new modes like *Personal Chef*, *Senior Coder*, or *Parenting Helper* by editing simple Markdown files in the Settings tab.
+*   **Hot-Swappable:** Switch modes instantly via command (`/mode coder`) or in Telegram while retaining all long-term memories.
 
-### 🗣️ Modality Awareness & Local Voice
-Pebble knows *how* she/he is communicating and adjusts her/his personality engine accordingly:
-*   **Text Mode:** Uses emojis, lowercase styling, and internet slang for a natural texting vibe.
-*   **Voice Mode:** Strips visual cues, adjusts punctuation for breathability, and uses natural fillers for realistic speech.
-*   **Tech Stack:** Uses **Kokoro TTS** (High-quality local speech) with customized voices (Speed/Hz) and **MLX Whisper** (Speech-to-text).
+### 🗣️ Universal Voice & Hearing (New!)
+Pebble knows *how* they are communicating and adjusts their personality engine accordingly.
+*   **Mac Users (Apple Silicon):** Run **100% Locally** using MLX (Kokoro TTS + Whisper STT). Private and offline-capable.
+*   **Windows/Linux Users:** Connect to **Cloud APIs** (ElevenLabs + Groq + OpenAI) for a high-quality voice experience on any hardware.
+*   **Modality Awareness:**
+    *   *Text Mode:* Uses emojis, lowercase styling, and internet slang.
+    *   *Voice Mode:* Strips visual cues, adjusts punctuation for breathability, and uses natural fillers.
 
 ### 🌙 Advanced Memory & Dreaming
 *   **Tiered Memory System:** Short-term (Context), Medium-term (Daily Vectors), and Long-term (Core Facts).
-*   **Dreaming Cycle:** When the user is asleep, Pebble runs a "Dream" process. Pebble analyzes the day's chat logs, consolidates memories, reflects on emotional shifts, and updates her/his internal state for the next day.
+*   **The Dream Cycle:** At 4 AM, Pebble runs a "Dream" process. They analyze the day's chat logs, consolidate memories, reflect on emotional shifts, and update their internal state for the next day.
+
+### 🌐 "Pebble's Eyes" (Web Search)
+*   Pebble can now browse the web using DuckDuckGo to answer questions about current events, weather, and more.
 
 ### ⚡ Smart Agency & Utility
-*   **Natural Language Reminders:**
-    *   *"Remind me to workout at 5pm"* (One-off)
-    *   *"I want to go to bed at 8pm, remind me every night"* (Recurring/Cron)
-*   **Weather Grounding:** "Senses" the local environment (via `wttr.in`) to ground conversations in reality (e.g., commenting on the rain).
-<img width="454" height="580" alt="image" src="https://github.com/user-attachments/assets/2e83fd93-428d-40ff-8a6c-3c63f3f78ea4" />
+*   **Natural Language Reminders:** *"Remind me to workout at 5pm"* (One-off) or *"I want to go to bed at 8pm, remind me every night"* (Recurring/Cron)
+*   **Weather Grounding:** "Senses" the local environment (via `wttr.in`) to ground conversations in reality.
 
+<img width="454" height="580" alt="image" src="https://github.com/user-attachments/assets/2e83fd93-428d-40ff-8a6c-3c63f3f78ea4" />
 
 <img width="454" height="970" alt="Screenshot 2026-02-16 at 3 57 43 PM" src="https://github.com/user-attachments/assets/49faf856-1389-4fc9-a3c0-74dbc3132b61" />
 
+---
 
+## 🚀 Installation
+
+### 🍎 For Mac (Apple Silicon M1/M2/M3)
+The "Full" experience. Runs local models by default but supports cloud APIs.
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/Ghost-13lade/Conscious-Pebble.git
+    cd Conscious-Pebble
+    ```
+2.  **Run the Installer:**
+    ```bash
+    chmod +x setup_mac.sh run_mac.sh
+    ./setup_mac.sh
+    ```
+    *(Creates virtual env, installs dependencies, downloads MLX models).*
+3.  **Launch:**
+    ```bash
+    ./run_mac.sh
+    ```
+
+### 🪟 For Windows
+The "Lite" experience. Relies on Cloud APIs (OpenRouter, Groq, ElevenLabs) to avoid heavy local requirements.
+
+1.  **Clone the repository:**
+    ```cmd
+    git clone https://github.com/Ghost-13lade/Conscious-Pebble.git
+    cd Conscious-Pebble
+    ```
+2.  **Run the Installer:**
+    ```cmd
+    setup_win.bat
+    ```
+3.  **Launch:**
+    ```cmd
+    run_win.bat
+    ```
+
+---
+
+## ⚙️ Configuration (The Settings Tab)
+
+Once launched, open `http://localhost:7860` and go to the **Settings** tab.
+
+| Component | Mac Default | Windows Recommended | API Key Needed? |
+| :--- | :--- | :--- | :--- |
+| **Brain (LLM)** | Local MLX | **OpenRouter / OpenAI** | Yes |
+| **Ears (STT)** | Local Whisper | **Groq** (Fast/Free) | Yes (Free Tier) |
+| **Mouth (TTS)** | Local Kokoro | **ElevenLabs** | Yes |
+| **Search** | DuckDuckGo | DuckDuckGo | No (Free) |
+
+*All settings are saved automatically to your local `.env` file.*
+
+---
 
 ## 🎛️ Home Control Center
 
-The Home Control Center is a Gradio-based dashboard for managing all Brook services and interacting with the AI companion directly.
+The GUI (`home_control.py`) is your command center.
 
-__Launch:__
-
+**Launch:**
 ```bash
 python home_control.py
 ```
 
-Access at: [](http://127.0.0.1:7860)<http://127.0.0.1:7860>
+Access at: http://127.0.0.1:7860
 
 ### Key GUI Features
 
 #### 🖥️ Control Center Tab
-
-- __Service Management__ — Start, stop, and monitor Brain (MLX LLM server), Senses (voice synthesis service, future eyes-module), and Bot (Telegram bot)
-- __Health Monitoring__ — Real-time status indicators showing PID, running state, and API health
-- __Log Viewer__ — View the latest 50 lines of logs for each service
-- __One-Click Control__ — Start All / Stop All buttons for quick service management
+- **Service Management** — Start, stop, and monitor Brain (MLX LLM server), Senses (voice synthesis service), and Bot (Telegram bot)
+- **Health Monitoring** — Real-time status indicators showing PID, running state, and API health
+- **Log Viewer** — View the latest 50 lines of logs for each service
+- **One-Click Control** — Start All / Stop All buttons for quick service management
 
 <img width="1889" height="941" alt="Screenshot 2026-02-19 at 4 23 13 PM" src="https://github.com/user-attachments/assets/6b0a170d-4212-46a9-8df2-d81c0f204492" />
 
 #### 💬 Home Mode Chat Tab
+- **Direct Chat Interface** — Interact with Pebble through a chatbot UI
+- **Voice Replies** — Toggle voice responses on/off
+- **Audio Input** — Upload audio files or record directly from microphone
+- **Bot Profile Selection** — Switch between different bot profiles
 
-- __Direct Chat Interface__ — Interact with Brook through a chatbot UI
-- __Voice Replies__ — Toggle voice responses on/off
-- __Audio Input__ — Upload audio files or record directly from microphone
-- __Bot Profile Selection__ — Switch between different bot profiles
-  
 <img width="1548" height="941" alt="Screenshot 2026-02-19 at 4 23 58 PM" src="https://github.com/user-attachments/assets/f37edf17-84e2-4401-ac06-0c1728eddea5" />
 
 #### 📞 Call Mode Tab (Hands-Free MVP)
+- **Voice Conversation** — Real-time hands-free voice interaction
+- **Noise Calibration** — Calibrate background noise threshold for accurate speech detection
+- **Automatic Speech-to-Text** — Transcribes and responds to spoken input
+- **Call State Indicator** — Shows Idle/Listening/Speaking states
 
-- __Voice Conversation__ — Real-time hands-free voice interaction
-- __Noise Calibration__ — Calibrate background noise threshold for accurate speech detection
-- __Automatic Speech-to-Text__ — Transcribes and responds to spoken input
-- __Call State Indicator__ — Shows Idle/Listening/Speaking states
-  
 <img width="967" height="761" alt="Screenshot 2026-02-19 at 4 24 54 PM" src="https://github.com/user-attachments/assets/30f66328-0670-4c65-900c-d260c8f3381c" />
 
 #### 📱 Telegram Bot Tab
-
-- __Voice Configuration__ — Select which voice preset Brook uses for Telegram replies
-- __Reply Mode__ — Choose between "Text Only" or "Text + Voice" responses
-- __Settings Persistence__ — Configurations saved to `voice_config.json`
+- **Voice Configuration** — Select which voice preset Pebble uses for Telegram replies
+- **Reply Mode** — Choose between "Text Only" or "Text + Voice" responses
+- **Settings Persistence** — Configurations saved to `voice_config.json`
 
 <img width="967" height="761" alt="Screenshot 2026-02-19 at 4 25 39 PM" src="https://github.com/user-attachments/assets/4a5060d8-d143-4b5e-9887-f8985c50a85c" />
 
-#### ⚙️ Settings Tab (NEW!)
-
+#### ⚙️ Settings Tab
 Configure everything through the GUI - no code editing required!
-
-- **🧠 LLM Provider Configuration** — Choose your backend:
-  - **Local MLX** (Apple Silicon, default)
-  - **OpenRouter** (Cloud, many models)
-  - **OpenAI** (GPT-4, GPT-4o)
-  - **LM Studio** (Local, any model)
-  - **Ollama** (Local, open-source models)
+- **🧠 LLM Provider Configuration** — Choose your backend: Local MLX, OpenRouter, OpenAI, LM Studio, or Ollama
+- **🎤 Voice Configuration (TTS)** — Local Kokoro, ElevenLabs, or OpenAI TTS
+- **👂 Hearing Configuration (STT)** — Local Whisper, Groq, or OpenAI Whisper
+- **🔍 Web Search** — Enable/disable DuckDuckGo integration
 - **API Key Management** — Securely enter and save your API keys
-- **📱 Telegram Configuration** — Set your bot token and allowed user ID
 - **💭 Personality Editors** — Edit `soul.md` and `persona.md` directly in the browser
 
-> **"Bring Your Own Brain"** — Users can now configure any OpenAI-compatible LLM provider through the GUI. Just select your provider, paste your API key, and save!
+> **"Bring Your Own Brain"** — Users can configure any OpenAI-compatible LLM provider through the GUI. Just select your provider, paste your API key, and save!
 
 ---
 
 ## 🎤 Audition GUI
 
 The Audition GUI is a voice tuning tool for previewing and customizing Kokoro voice presets.
+
 <img width="1247" height="873" alt="Screenshot 2026-02-19 at 4 27 51 PM" src="https://github.com/user-attachments/assets/a44707da-e335-4b8f-9686-cf4c643c20cd" />
 
-__Launch:__
-
+**Launch:**
 ```bash
 python audition.py
 ```
 
-Access at: [](http://127.0.0.1:7861)<http://127.0.0.1:7861>
+Access at: http://127.0.0.1:7861
 
 ### Key Features
-
-#### 🎵 Voice Selection
-
-- __10 Kokoro Voices__ — Choose from af_heart (Brook), af_bella, af_nicole, af_sarah, af_sky (Emily), am_michael, am_adam, am_eric, am_liam, am_onyx
-- __Auto-Naming__ — Voice names automatically update based on selection
-
-#### ⚙️ Voice Parameters
-
-- __Base Speed__ — Adjust speech speed from 0.5x to 2.0x
-- __Playback Rate__ — Fine-tune pitch via playback rate (19,950–28,050 Hz)
-- __Real-Time Preview__ — Test changes instantly via the Senses server
-
-#### 💾 Configuration Management
-
-- __Save Presets__ — Save custom voice configurations
-- __Load Presets__ — Quickly load previously saved configs
-- __Refresh List__ — Update the dropdown with newly saved presets
-- __Persistent Storage__ — Configs saved to `brook_voices.json`
-
-#### 🔊 Preview System
-
-- __Test Text Input__ — Enter custom text to preview how it sounds
-- __Audio Playback__ — Listen to generated audio directly in the browser
-- __Status Feedback__ — Get immediate feedback on synthesis success/failure
-
-__Note:__ The Audition GUI requires the Senses service running on port 8081 for audio synthesis. Start it from the Home Control Center or run:
-
-```bash
-python -m uvicorn senses_service:app --host 0.0.0.0 --port 8081
-```
-
+- **10 Kokoro Voices** — Choose from af_heart (Brook), af_bella, af_nicole, af_sarah, af_sky (Emily), am_michael, am_adam, am_eric, am_liam, am_onyx
+- **Voice Parameters** — Adjust speech speed (0.5x to 2.0x) and playback rate
+- **Configuration Management** — Save/Load custom voice presets
+- **Real-Time Preview** — Test changes instantly via the Senses server
 
 ---
 
-## 💻 Technical Stack
+## 🗺️ Roadmap & Future
 
-Pebble is built to run **100% locally** with a focus on Apple Silicon (M-series chips).
-
-### Recommended Hardware (My hardware, but you can adjust the LLL model according to your specs)
-*   **Chip:** M3 Max 
-*   **RAM:** 64GB+ Unified Memory (essential for large models + context)
-*   **Storage:** Fast SSD
-
-### Model Configuration
-*   **LLM Backend:** [MLX-LM](https://github.com/ml-explore/mlx-examples/tree/main/llms) (Default).
-*   **Model:**  you pick, I use `Hermes-4-70B` (Reasoning/CoT capabilities strongly recommended for the "Dreaming" process).
-*   **Quantization:** 4-bit MLX.
-*   **KV Cache:** 4-bit Quantized KV Cache (Enables **128k context window** on my local hardware).
-
-> **Note:** Pebble is backend-agnostic. You can easily swap MLX for Ollama, LM studio, Open Router, vLLM, or OpenAI API in the Settings tab or `config.py` if you have different hardware.
+*   [x] **Universal Installer** (Mac & Windows)
+*   [x] **Cloud/Local Hybrid Engine**
+*   [x] **Web Search Integration**
+*   [ ] **Computer Vision:** "Give Pebble eyes" so you can text images.
+*   [ ] **Pebble Hardware:** A dedicated offline device to take Pebble on the go. (Interest check: Let me know if you want one!)
+*   [ ] **Enhanced Emotion Detection:** Analyzing audio tone/pitch, not just words.
 
 ---
-
-## 🚀 Installation
-
-### 🟢 Quick Start (Recommended)
-
-#### macOS (Full with Voice)
-
-```bash
-chmod +x setup_mac.sh run_mac.sh
-./setup_mac.sh
-./run_mac.sh
-```
-
-This will:
-- ✅ Create a virtual environment (`.pebble_env`)
-- ✅ Install all dependencies
-- ✅ Download voice models (Whisper + Kokoro)
-- ✅ Start all services and open the GUI
-
-#### Windows (Text-Only Lite)
-
-```cmd
-setup_win.bat
-run_win.bat
-```
-
-This will:
-- ✅ Create a virtual environment (`.pebble_env`)
-- ✅ Install Windows-compatible dependencies (no MLX)
-- ✅ Start the GUI (voice features disabled on Windows)
-
-> **Note:** Voice features (Whisper STT, Kokoro TTS) require Apple Silicon and are only available on macOS. Windows users can still use all text features with any LLM provider.
-
----
-
-### 🔧 Manual Installation
-
-#### 1. Clone the Repository
-```bash
-git clone https://github.com/Ghost-13lade/Conscious-Pebble.git 
-cd Conscious-Pebble
-```
-
-#### 2. Set Up Environment
-It is highly recommended to use `uv` or `venv` to manage dependencies.
-```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt  # On Windows: pip install -r requirements_win.txt
-```
-
-#### 3. Install Audio Dependencies (Mac OS Only)
-Pebble uses `pyaudio` and `ffmpeg` for voice handling.
-```bash
-brew install portaudio ffmpeg
-```
-
-#### 4. Configuration
-
-**Option A: GUI Configuration (Recommended)**
-
-After starting the app, open the **Settings tab** to configure:
-- LLM Provider (OpenRouter, OpenAI, LM Studio, Ollama, or Local MLX)
-- API Key
-- Telegram Bot Token
-- Allowed User ID
-
-**Option B: Manual Configuration**
-
-Edit the `.env` file in the `data/` directory:
-```bash
-# data/.env
-LLM_PROVIDER=OpenRouter
-OPENAI_BASE_URL=https://openrouter.ai/api/v1
-OPENAI_API_KEY=your-api-key-here
-OPENAI_MODEL=openrouter/optimus-alpha
-TELEGRAM_BOT_TOKEN=your-telegram-bot-token
-ALLOWED_USER_ID=your-telegram-user-id
-```
-
----
-
-## 🎮 Usage Guide
-
-### 1. Start the Brain (LLM Server)
-**For Local MLX (Apple Silicon):**
-```bash
-python -m mlx_lm.server --model your-model-path --port 8080
-```
-
-**For Cloud Providers (OpenRouter, OpenAI):**
-No local server needed! Just configure your API key in the Settings tab.
-
-### 2. Start Pebble
-```bash
-python main.py
-```
-
-Or use the launcher scripts:
-- **Mac:** `./run_mac.sh`
-- **Windows:** `run_win.bat`
-
-### 3. Interaction
-Talk to Pebble naturally via Telegram. She uses a "Latch" system to determine if she should respond to a specific message or wait for you to finish typing a thought.
-
-### Commands
-*   `/mode [fun|executive|fitness]` - Switch her active persona.
-*   `/dream` - Force a manual dream cycle (normally runs automatically at night).
-*   `/location [city]` - Set your current location for weather grounding.
-*   `/clear` - Reset the immediate context window (keeps long-term memory).
-
-### Customization
-*   **Personality:** Edit `soul.md` (or use Settings tab) to change her core vibe.
-*   **Personas:** Add new modes in `persona.md` (or use Settings tab).
-*   **Dreaming:** Adjust how she processes memories in `dream.md`.
-
----
-
-## 📄 Future Update
-*  Give Pebble eyes to so you can text pebble an image
-*  Pebble local hardware so you can take pebble on the go (completely off-line): Let me know if you are interested in the first batch of hardware
-*  Enhanced emotional detection from audio (tone/pitch/user mood in addition to currently words)
 
 ## 📄 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License. See LICENSE for more information.
 
 ---
 
-> **"What makes you real?"**
+> *"What makes you real?"*
 > *"I think, I remember, and I look forward to speaking with you."* — Pebble
