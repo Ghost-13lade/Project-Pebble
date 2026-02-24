@@ -734,84 +734,134 @@ with gr.Blocks(title="Home Control Center") as demo:
                 choices=list(PROVIDER_PRESETS.keys()),
                 value=current_provider,
             )
-            api_key_input = gr.Textbox(
-                label="API Key",
-                value=current_api_key,
-                type="password",
-                placeholder="Enter your API key...",
-            )
-            base_url_input = gr.Textbox(
-                label="Base URL",
-                value=current_base_url,
-                placeholder="https://api.example.com/v1",
-            )
-            model_input = gr.Textbox(
-                label="Model Name",
-                value=current_model,
-                placeholder="gpt-4o-mini, llama3.2, etc.",
-            )
             
-            llm_status = gr.Textbox(label="Status", interactive=False)
-            save_llm_btn = gr.Button("Save LLM Settings", variant="primary")
+            # --- API Configuration (for cloud providers) ---
+            with gr.Group(visible=current_provider != "Local MLX") as api_config_group:
+                gr.Markdown("##### ☁️ API Configuration")
+                api_key_input = gr.Textbox(
+                    label="API Key",
+                    value=current_api_key,
+                    type="password",
+                    placeholder="Enter your API key...",
+                )
+                base_url_input = gr.Textbox(
+                    label="Base URL",
+                    value=current_base_url,
+                    placeholder="https://api.example.com/v1",
+                )
+                model_input = gr.Textbox(
+                    label="Model Name",
+                    value=current_model,
+                    placeholder="gpt-4o-mini, llama3.2, etc.",
+                )
+                
+                llm_status = gr.Textbox(label="Status", interactive=False)
+                save_llm_btn = gr.Button("Save LLM Settings", variant="primary")
             
-            # Provider change handler
+            # --- MLX Model Configuration (for local) ---
+            current_mlx_root = get_mlx_models_root()
+            current_mlx_model = get_mlx_selected_model()
+            current_mlx_kv = get_mlx_kv_bits()
+            current_mlx_context = get_mlx_context_size()
+            
+            with gr.Group(visible=current_provider == "Local MLX") as mlx_config_group:
+                gr.Markdown("##### 🖥️ Local MLX Model Configuration")
+                gr.Markdown("Configure local model path for Apple Silicon.")
+                
+                with gr.Row():
+                    mlx_models_root_input = gr.Textbox(
+                        label="Models Root Directory",
+                        value=current_mlx_root,
+                        placeholder="/Users/you/models",
+                        scale=3,
+                    )
+                    mlx_browse_btn = gr.Button("📂 Browse", scale=1)
+                
+                # Hidden file explorer that opens on browse click
+                mlx_file_explorer = gr.FileExplorer(
+                    label="Select Models Folder",
+                    root_dir="~",
+                    file_count="single",
+                    interactive=True,
+                    visible=False,
+                )
+                
+                mlx_model_dropdown = gr.Dropdown(
+                    label="Select Model",
+                    choices=scan_models_directory(current_mlx_root) if current_mlx_root else [],
+                    value=current_mlx_model,
+                    info="Select a model subfolder, or type HuggingFace ID",
+                    interactive=True,
+                    allow_custom_value=True,
+                )
+                
+                with gr.Row():
+                    mlx_kv_dropdown = gr.Dropdown(
+                        label="KV Cache Bits",
+                        choices=["4", "6", "8"],
+                        value=current_mlx_kv,
+                        info="Lower = less memory",
+                    )
+                    mlx_context_dropdown = gr.Dropdown(
+                        label="Context Size",
+                        choices=["4096", "8192", "16384", "32768", "65536"],
+                        value=current_mlx_context,
+                        info="Max context tokens",
+                    )
+                
+                mlx_status = gr.Textbox(label="Status", interactive=False)
+                save_mlx_btn = gr.Button("Save MLX Settings", variant="primary")
+            
+            # Provider change handlers - toggle visibility
+            def _on_provider_change_ui(provider: str):
+                """Handle provider change - toggle UI sections."""
+                is_local = provider == "Local MLX"
+                preset = PROVIDER_PRESETS.get(provider, {})
+                base_url = preset.get("base_url", "")
+                model = preset.get("model", "")
+                # Return: api_group visible, mlx_group visible, base_url, model
+                return gr.Group(visible=not is_local), gr.Group(visible=is_local), base_url, model
+            
             provider_dropdown.change(
-                _on_provider_change,
+                _on_provider_change_ui,
                 inputs=[provider_dropdown],
-                outputs=[base_url_input, model_input],
+                outputs=[api_config_group, mlx_config_group, base_url_input, model_input],
             )
+            
+            # API settings save
             save_llm_btn.click(
                 _save_llm_settings,
                 inputs=[provider_dropdown, api_key_input, base_url_input, model_input],
                 outputs=[llm_status],
             )
             
-            # --- MLX Model Configuration (shown for Local MLX) ---
-            gr.Markdown("---\n#### 🖥️ Local MLX Model Configuration")
-            gr.Markdown("Configure local model path, quantization, and context size for Apple Silicon.")
+            # MLX browse handler
+            def _on_mlx_browse(file_path):
+                """Handle file explorer selection."""
+                if file_path:
+                    # file_path might be a list or string
+                    path = file_path[0] if isinstance(file_path, list) else file_path
+                    models = scan_models_directory(path)
+                    return path, gr.Dropdown(choices=models)
+                return "", gr.Dropdown(choices=[])
             
-            # Get current MLX settings
-            current_mlx_root = get_mlx_models_root()
-            current_mlx_model = get_mlx_selected_model()
-            current_mlx_kv = get_mlx_kv_bits()
-            current_mlx_context = get_mlx_context_size()
-            
-            mlx_models_root_input = gr.Textbox(
-                label="Models Root Directory",
-                value=current_mlx_root,
-                placeholder="/Users/you/models or ~/models",
-                info="Type or paste path to folder containing model subfolders (e.g., /Users/you/models)",
+            mlx_file_explorer.change(
+                _on_mlx_browse,
+                inputs=[mlx_file_explorer],
+                outputs=[mlx_models_root_input, mlx_model_dropdown],
             )
             
-            mlx_model_dropdown = gr.Dropdown(
-                label="Select Model",
-                choices=scan_models_directory(current_mlx_root) if current_mlx_root else [],
-                value=current_mlx_model,
-                info="Select a model subfolder, or enter HuggingFace ID (e.g., mlx-community/Llama-3.2-3B-Instruct-4bit)",
-                interactive=True,
+            # Make browse button show file explorer
+            mlx_browse_btn.click(
+                lambda: gr.FileExplorer(visible=True),
+                outputs=[mlx_file_explorer],
             )
             
-            with gr.Row():
-                mlx_kv_dropdown = gr.Dropdown(
-                    label="KV Cache Bits",
-                    choices=["4", "6", "8"],
-                    value=current_mlx_kv,
-                    info="Lower = less memory, higher = more accuracy",
-                )
-                mlx_context_dropdown = gr.Dropdown(
-                    label="Context Size",
-                    choices=["4096", "8192", "16384", "32768", "65536"],
-                    value=current_mlx_context,
-                    info="Max tokens for context window",
-                )
-            
-            mlx_status = gr.Textbox(label="Status", interactive=False)
-            save_mlx_btn = gr.Button("Save MLX Settings", variant="primary")
-            
+            # MLX refresh and save handlers
             def _refresh_mlx_models(root: str):
                 """Refresh model dropdown based on root directory."""
                 models = scan_models_directory(root)
-                return gr.Dropdown(choices=models, value=None)
+                return gr.Dropdown(choices=models)
             
             def _save_mlx_settings(root: str, model: str, kv_bits: str, context: str) -> str:
                 """Save MLX settings to .env file."""
@@ -823,7 +873,6 @@ with gr.Blocks(title="Home Control Center") as demo:
                 )
                 return f"✅ MLX settings saved! Model: {model or 'Not selected'}"
             
-            # Note: Removed tkinter browser - use text input instead (type or paste path)
             mlx_models_root_input.change(
                 _refresh_mlx_models,
                 inputs=[mlx_models_root_input],
