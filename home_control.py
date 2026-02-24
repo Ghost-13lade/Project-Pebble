@@ -586,6 +586,45 @@ def _save_telegram_bot_settings(token: str, user_id: str) -> str:
     return "✅ Telegram settings saved! Restart bot to apply changes."
 
 
+def _native_folder_picker() -> str:
+    """Open native folder picker dialog (macOS/Windows)."""
+    import platform
+    import subprocess
+    
+    system = platform.system()
+    
+    try:
+        if system == "Darwin":  # macOS
+            result = subprocess.run(
+                ['osascript', '-e', 'POSIX path of (choose folder with prompt "Select Models Folder")'],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return result.stdout.strip()
+        elif system == "Windows":
+            # Windows PowerShell folder browser
+            ps_script = '''
+            Add-Type -AssemblyName System.Windows.Forms
+            $folder = New-Object System.Windows.Forms.FolderBrowserDialog
+            $folder.Description = "Select Models Folder"
+            if ($folder.ShowDialog() -eq "OK") { $folder.SelectedPath }
+            '''
+            result = subprocess.run(
+                ['powershell', '-Command', ps_script],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            if result.stdout.strip():
+                return result.stdout.strip()
+    except Exception as e:
+        print(f"[Browse] Native picker error: {e}")
+    
+    return ""
+
+
 def process_call_turn(profile_name: str, call_on: bool, threshold: float, audio_path: str, pairs: List[List[str]]):
     if not call_on:
         return pairs, "Idle", "Turn on Call Mode first.", None
@@ -773,18 +812,9 @@ with gr.Blocks(title="Home Control Center") as demo:
                         label="Models Root Directory",
                         value=current_mlx_root,
                         placeholder="/Users/you/models",
-                        scale=3,
-                    )
-                    mlx_browse_btn = gr.Button("📂 Browse", scale=1)
-                
-                # Hidden file explorer that opens on browse click
-                mlx_file_explorer = gr.FileExplorer(
-                    label="Select Models Folder",
-                    root_dir=str(Path.home()),
-                    file_count="single",
-                    interactive=True,
-                    visible=False,
+                    scale=3,
                 )
+                    mlx_browse_btn = gr.Button("📂 Browse", scale=1)
                 
                 mlx_model_dropdown = gr.Dropdown(
                     label="Select Model",
@@ -835,26 +865,18 @@ with gr.Blocks(title="Home Control Center") as demo:
                 outputs=[llm_status],
             )
             
-            # MLX browse handler
-            def _on_mlx_browse(file_path):
-                """Handle file explorer selection."""
-                if file_path:
-                    # file_path might be a list or string
-                    path = file_path[0] if isinstance(file_path, list) else file_path
+            # Native folder picker handler
+            def _on_mlx_browse_native():
+                """Open native folder picker and update path."""
+                path = _native_folder_picker()
+                if path:
                     models = scan_models_directory(path)
                     return path, gr.Dropdown(choices=models)
-                return "", gr.Dropdown(choices=[])
+                return gr.Textbox(), gr.Dropdown()
             
-            mlx_file_explorer.change(
-                _on_mlx_browse,
-                inputs=[mlx_file_explorer],
-                outputs=[mlx_models_root_input, mlx_model_dropdown],
-            )
-            
-            # Make browse button show file explorer
             mlx_browse_btn.click(
-                lambda: gr.FileExplorer(visible=True),
-                outputs=[mlx_file_explorer],
+                _on_mlx_browse_native,
+                outputs=[mlx_models_root_input, mlx_model_dropdown],
             )
             
             # MLX refresh and save handlers
@@ -947,83 +969,90 @@ with gr.Blocks(title="Home Control Center") as demo:
             
             # --- Voice/TTS Configuration Section ---
             gr.Markdown("---\n#### 🎤 Voice Configuration (TTS)")
-            gr.Markdown("Configure text-to-speech. Use ElevenLabs for Windows/Linux, or Local for Mac with MLX.")
+            gr.Markdown("Configure text-to-speech for Pebble's voice responses.")
             
             # Get current TTS settings
             current_tts_provider = get_tts_provider()
             current_elevenlabs_key = get_elevenlabs_api_key()
             current_elevenlabs_voice = get_elevenlabs_voice_id()
+            current_openai_tts_voice = get_openai_tts_voice()
             
             tts_provider_dropdown = gr.Dropdown(
                 label="TTS Provider",
                 choices=["local", "elevenlabs", "openai", "none"],
                 value=current_tts_provider,
-                info="Local = Mac only (MLX/Kokoro). ElevenLabs/OpenAI = Cloud (Windows/Linux/Mac). None = Text only."
+                info="Local = Mac only (MLX/Kokoro). ElevenLabs/OpenAI = Cloud. None = Text only."
             )
             
-            elevenlabs_key_input = gr.Textbox(
-                label="ElevenLabs API Key",
-                value=current_elevenlabs_key,
-                type="password",
-                placeholder="xi-xxxxxxxxxx...",
-                info="Get your key from elevenlabs.io"
-            )
+            # ElevenLabs config (visible when elevenlabs selected)
+            with gr.Group(visible=current_tts_provider == "elevenlabs") as tts_elevenlabs_group:
+                elevenlabs_key_input = gr.Textbox(
+                    label="ElevenLabs API Key",
+                    value=current_elevenlabs_key,
+                    type="password",
+                    placeholder="xi-xxxxxxxxxx...",
+                )
+                elevenlabs_voice_input = gr.Textbox(
+                    label="ElevenLabs Voice ID",
+                    value=current_elevenlabs_voice,
+                    placeholder="21m00Tcm4TlvDq8ikWAM",
+                    info="Find voice IDs in ElevenLabs dashboard",
+                )
             
-            elevenlabs_voice_input = gr.Textbox(
-                label="ElevenLabs Voice ID",
-                value=current_elevenlabs_voice,
-                placeholder="21m00Tcm4TlvDq8ikWAM",
-                info="Default: Rachel. Find voice IDs in ElevenLabs dashboard."
-            )
+            # OpenAI TTS config (visible when openai selected)
+            with gr.Group(visible=current_tts_provider == "openai") as tts_openai_group:
+                openai_tts_voice_dropdown = gr.Dropdown(
+                    label="OpenAI TTS Voice",
+                    choices=["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
+                    value=current_openai_tts_voice,
+                    info="Select a voice for OpenAI TTS",
+                )
+            
+            # Local TTS info (visible when local selected)
+            with gr.Group(visible=current_tts_provider == "local") as tts_local_group:
+                gr.Markdown("💡 Local TTS uses MLX/Kokoro on Apple Silicon. No additional config needed.")
             
             tts_status = gr.Textbox(label="Status", interactive=False)
             save_tts_btn = gr.Button("Save Voice Settings", variant="primary")
             
-            def _save_tts_settings(provider: str, api_key: str, voice_id: str) -> str:
+            def _on_tts_provider_change(provider: str):
+                """Toggle TTS config visibility based on provider."""
+                return (
+                    gr.Group(visible=provider == "elevenlabs"),
+                    gr.Group(visible=provider == "openai"),
+                    gr.Group(visible=provider == "local"),
+                )
+            
+            tts_provider_dropdown.change(
+                _on_tts_provider_change,
+                inputs=[tts_provider_dropdown],
+                outputs=[tts_elevenlabs_group, tts_openai_group, tts_local_group],
+            )
+            
+            def _save_tts_settings(provider: str, elevenlabs_key: str, elevenlabs_voice: str, openai_voice: str) -> str:
                 """Save TTS settings to .env file."""
                 save_env_value("TTS_PROVIDER", provider)
-                if api_key:
-                    save_env_value("ELEVENLABS_API_KEY", api_key)
-                if voice_id:
-                    save_env_value("ELEVENLABS_VOICE_ID", voice_id)
+                if provider == "elevenlabs":
+                    if elevenlabs_key:
+                        save_env_value("ELEVENLABS_API_KEY", elevenlabs_key)
+                    if elevenlabs_voice:
+                        save_env_value("ELEVENLABS_VOICE_ID", elevenlabs_voice)
+                elif provider == "openai":
+                    if openai_voice:
+                        save_env_value("OPENAI_TTS_VOICE", openai_voice)
                 reload_env()
                 print(f"[Voice] TTS settings saved - Provider: {provider}")
                 return f"✅ Voice settings saved! Provider: {provider}"
             
             save_tts_btn.click(
                 _save_tts_settings,
-                inputs=[tts_provider_dropdown, elevenlabs_key_input, elevenlabs_voice_input],
+                inputs=[tts_provider_dropdown, elevenlabs_key_input, elevenlabs_voice_input, openai_tts_voice_dropdown],
                 outputs=[tts_status],
-            )
-            
-            # --- OpenAI TTS Configuration ---
-            gr.Markdown("##### OpenAI TTS (Alternative Cloud)")
-            current_openai_tts_voice = get_openai_tts_voice()
-            
-            openai_tts_voice_dropdown = gr.Dropdown(
-                label="OpenAI TTS Voice",
-                choices=["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
-                value=current_openai_tts_voice,
-                info="Select a voice for OpenAI TTS (used when TTS Provider = openai)"
-            )
-            
-            openai_tts_status = gr.Textbox(label="Status", interactive=False)
-            save_openai_tts_btn = gr.Button("Save OpenAI Voice", variant="secondary")
-            
-            def _save_openai_tts_voice(voice: str) -> str:
-                save_env_value("OPENAI_TTS_VOICE", voice)
-                reload_env()
-                return f"✅ OpenAI TTS voice saved: {voice}"
-            
-            save_openai_tts_btn.click(
-                _save_openai_tts_voice,
-                inputs=[openai_tts_voice_dropdown],
-                outputs=[openai_tts_status],
             )
             
             # --- Hearing/STT Configuration Section ---
             gr.Markdown("---\n#### 👂 Hearing Configuration (STT)")
-            gr.Markdown("Configure speech-to-text. Use Groq for Windows/Linux (fast, free tier), or Local for Mac with MLX.")
+            gr.Markdown("Configure speech-to-text for Pebble to understand voice input.")
             
             current_stt_provider = get_stt_provider()
             current_groq_key = get_groq_api_key()
@@ -1032,25 +1061,49 @@ with gr.Blocks(title="Home Control Center") as demo:
                 label="STT Provider",
                 choices=["local", "groq", "openai"],
                 value=current_stt_provider,
-                info="Local = Mac only (MLX Whisper). Groq = Cloud (fast, free tier). OpenAI = Cloud."
+                info="Local = Mac only (MLX Whisper). Groq/OpenAI = Cloud."
             )
             
-            groq_key_input = gr.Textbox(
-                label="Groq API Key",
-                value=current_groq_key,
-                type="password",
-                placeholder="gsk_...",
-                info="Get your key from console.groq.com"
-            )
+            # Groq config (visible when groq selected)
+            with gr.Group(visible=current_stt_provider == "groq") as stt_groq_group:
+                groq_key_input = gr.Textbox(
+                    label="Groq API Key",
+                    value=current_groq_key,
+                    type="password",
+                    placeholder="gsk_...",
+                    info="Get your key from console.groq.com",
+                )
+            
+            # OpenAI config (visible when openai selected)
+            with gr.Group(visible=current_stt_provider == "openai") as stt_openai_group:
+                gr.Markdown("💡 Uses the same OpenAI API key from LLM Provider settings.")
+            
+            # Local STT info (visible when local selected)
+            with gr.Group(visible=current_stt_provider == "local") as stt_local_group:
+                gr.Markdown("💡 Local STT uses MLX Whisper on Apple Silicon. No additional config needed.")
             
             stt_status = gr.Textbox(label="Status", interactive=False)
             save_stt_btn = gr.Button("Save Hearing Settings", variant="primary")
             
-            def _save_stt_settings(provider: str, api_key: str) -> str:
+            def _on_stt_provider_change(provider: str):
+                """Toggle STT config visibility based on provider."""
+                return (
+                    gr.Group(visible=provider == "groq"),
+                    gr.Group(visible=provider == "openai"),
+                    gr.Group(visible=provider == "local"),
+                )
+            
+            stt_provider_dropdown.change(
+                _on_stt_provider_change,
+                inputs=[stt_provider_dropdown],
+                outputs=[stt_groq_group, stt_openai_group, stt_local_group],
+            )
+            
+            def _save_stt_settings(provider: str, groq_key: str) -> str:
                 """Save STT settings to .env file."""
                 save_env_value("STT_PROVIDER", provider)
-                if api_key:
-                    save_env_value("GROQ_API_KEY", api_key)
+                if provider == "groq" and groq_key:
+                    save_env_value("GROQ_API_KEY", groq_key)
                 reload_env()
                 print(f"[Voice] STT settings saved - Provider: {provider}")
                 return f"✅ Hearing settings saved! Provider: {provider}"
