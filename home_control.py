@@ -662,140 +662,6 @@ with gr.Blocks(title="Home Control Center") as demo:
         )
 
     with gr.Tabs():
-        with gr.TabItem("Control Center"):
-            with gr.Row():
-                with gr.Column():
-                    brain_status = gr.Textbox(label="Brain Status", interactive=False)
-                    with gr.Row():
-                        start_brain_btn = gr.Button("Start Brain")
-                        stop_brain_btn = gr.Button("Stop Brain")
-
-                with gr.Column():
-                    senses_status = gr.Textbox(label="Senses Status", interactive=False)
-                    with gr.Row():
-                        start_senses_btn = gr.Button("Start Senses")
-                        stop_senses_btn = gr.Button("Stop Senses")
-
-                with gr.Column():
-                    bot_status = gr.Textbox(label="Bot Status", interactive=False)
-                    with gr.Row():
-                        start_bot_btn = gr.Button("Start Bot")
-                        stop_bot_btn = gr.Button("Stop Bot")
-
-            with gr.Row():
-                start_all_btn = gr.Button("Start All", variant="primary")
-                stop_all_btn = gr.Button("Stop All", variant="stop")
-                refresh_btn = gr.Button("Refresh Status")
-
-            with gr.Accordion("Logs (latest 50 lines)", open=False):
-                brain_log = gr.Textbox(label="Brain Log", lines=10, interactive=False)
-                senses_log = gr.Textbox(label="Senses Log", lines=10, interactive=False)
-                bot_log = gr.Textbox(label="Bot Log", lines=10, interactive=False)
-
-        with gr.TabItem("Home Mode Chat"):
-            profile = gr.Dropdown(label="Bot Profile", choices=list(BOT_PROFILES.keys()), value=ACTIVE_BOT_NAME)
-            voice_toggle = gr.Radio(label="Voice Reply", choices=["Off", "On"], value="Off")
-            chat = gr.Chatbot(label="Chat", height=340)
-            state = gr.State([])
-            status = gr.Textbox(label="Status", interactive=False)
-            with gr.Row():
-                chat_in = gr.Textbox(label="Type message", lines=2)
-                send_btn = gr.Button("Send")
-                clear_btn = gr.Button("Clear")
-            voice_out = gr.Audio(label="Voice Reply File", autoplay=True)
-            gr.Markdown("### Audio File Input")
-            audio_in = gr.Audio(label="Upload or record audio", sources=["upload", "microphone"], type="filepath")
-            send_audio_btn = gr.Button("Send Audio")
-            gr.Markdown("If microphone is unavailable, upload an audio file and Pebble will still respond.")
-
-        with gr.TabItem("Call Mode (Hands-Free MVP)"):
-            call_profile = gr.Dropdown(label="Bot Profile", choices=list(BOT_PROFILES.keys()), value=ACTIVE_BOT_NAME)
-            call_on = gr.Checkbox(label="Call Mode On", value=False)
-            call_state = gr.Textbox(label="Call State", value="Idle", interactive=False)
-            call_status = gr.Textbox(label="Call Status", interactive=False)
-            noise_threshold = gr.Slider(0.005, 0.08, value=0.015, step=0.001, label="Noise Threshold")
-            noise_clip = gr.Audio(label="Noise Sample (2 sec room tone)", sources=["microphone", "upload"], type="filepath")
-            calibrate_btn = gr.Button("Calibrate Background Noise")
-            call_audio_in = gr.Audio(label="Speak (record and submit segment)", sources=["microphone", "upload"], type="filepath")
-            process_turn_btn = gr.Button("Process Turn")
-            call_chat = gr.Chatbot(label="Call Transcript", height=260)
-            call_chat_state = gr.State([])
-            call_voice_out = gr.Audio(label="Pebble Voice Reply", autoplay=True)
-            gr.Markdown("If browser says no microphone found, use uploaded clips until mic permission is enabled.")
-
-        with gr.TabItem("Telegram Bot"):
-            gr.Markdown("### Telegram Bot Voice Settings")
-            gr.Markdown("Select a bot and configure its voice settings.")
-            
-            # Bot selector
-            bot_names = get_bot_names()
-            selected_bot = gr.Dropdown(
-                label="Select Bot",
-                choices=bot_names,
-                value=bot_names[0] if bot_names else "Pebble",
-            )
-            
-            # Load settings for selected bot
-            def _get_bot_voice_settings(bot_name: str) -> Tuple[str, str]:
-                """Get voice settings for a specific bot."""
-                bot_config = get_bot_config(bot_name)
-                if bot_config:
-                    return (
-                        bot_config.get("voice_name", "Pebble"),
-                        bot_config.get("voice_mode", "Text Only"),
-                    )
-                return "Pebble", "Text Only"
-            
-            initial_voice, initial_mode = _get_bot_voice_settings(bot_names[0] if bot_names else "Pebble")
-            
-            with gr.Row():
-                telegram_voice_dropdown = gr.Dropdown(
-                    label="Voice",
-                    choices=VOICE_NAMES,
-                    value=initial_voice,
-                )
-                telegram_mode_radio = gr.Radio(
-                    label="Reply Mode",
-                    choices=["Text Only", "Text + Voice"],
-                    value=initial_mode,
-                )
-            
-            save_telegram_btn = gr.Button("Save Settings", variant="primary")
-            telegram_status = gr.Textbox(label="Status", interactive=False)
-            
-            gr.Markdown("---")
-            gr.Markdown("**Current Settings:**")
-            current_settings_display = gr.Textbox(
-                label="",
-                value=f"Voice: {initial_voice} | Mode: {initial_mode}",
-                interactive=False,
-            )
-            
-            # Bot selector change handler - load bot's settings
-            def _on_bot_select(bot_name: str) -> Tuple[str, str, str]:
-                voice, mode = _get_bot_voice_settings(bot_name)
-                display = f"Voice: {voice} | Mode: {mode}"
-                return voice, mode, display
-            
-            selected_bot.change(
-                _on_bot_select,
-                inputs=[selected_bot],
-                outputs=[telegram_voice_dropdown, telegram_mode_radio, current_settings_display],
-            )
-            
-            # Save handler - save to bots_config.json
-            def _save_bot_voice_settings(bot_name: str, voice: str, mode: str) -> Tuple[str, str]:
-                """Save voice settings for a specific bot."""
-                update_bot(bot_name, voice_name=voice, voice_mode=mode)
-                display = f"Voice: {voice} | Mode: {mode}"
-                return f"✅ Saved! Bot: {bot_name}, Voice: {voice}, Mode: {mode}", display
-            
-            save_telegram_btn.click(
-                _save_bot_voice_settings,
-                inputs=[selected_bot, telegram_voice_dropdown, telegram_mode_radio],
-                outputs=[telegram_status, current_settings_display],
-            )
-
         with gr.TabItem("Settings"):
             gr.Markdown("### ⚙️ Application Configuration")
             gr.Markdown("Configure LLM provider, Telegram, and personality settings.")
@@ -946,15 +812,15 @@ with gr.Blocks(title="Home Control Center") as demo:
             
             # --- Telegram Bot Management Section ---
             gr.Markdown("---\n#### 📱 Telegram Bot Management")
-            gr.Markdown("Add and manage multiple Telegram bots, each with their own voice settings.")
+            gr.Markdown("Add and manage Telegram bots. Configure voice settings in the Telegram Bot tab.")
             
             # Bot list display
             bots = get_bots_config()
-            bot_list_data = [[name, cfg.get("token", "")[:10]+"...", cfg.get("voice_name", "Pebble"), cfg.get("voice_mode", "Text Only")] 
+            bot_list_data = [[name, cfg.get("token", "")[:10]+"..." if cfg.get("token") else "None", cfg.get("user_id", "")] 
                              for name, cfg in bots.items()]
             
             bot_list_display = gr.Dataframe(
-                headers=["Bot Name", "Token", "Voice", "Mode"],
+                headers=["Bot Name", "Token", "User ID"],
                 value=bot_list_data,
                 label="Configured Bots",
                 interactive=False,
@@ -969,13 +835,8 @@ with gr.Blocks(title="Home Control Center") as demo:
                 new_bot_name = gr.Textbox(label="Bot Name", placeholder="e.g., Pebble, Brook, Assistant")
                 edit_bot_dropdown = gr.Dropdown(label="Or Select to Edit", choices=get_bot_names(), value=None)
             
-            with gr.Row():
-                new_bot_token = gr.Textbox(label="Bot Token", type="password", placeholder="123456789:ABCdef...")
-                new_bot_user_id = gr.Textbox(label="Allowed User ID", placeholder="Your Telegram user ID")
-            
-            with gr.Row():
-                new_bot_voice = gr.Dropdown(label="Voice", choices=VOICE_NAMES, value="Pebble")
-                new_bot_mode = gr.Radio(label="Reply Mode", choices=["Text Only", "Text + Voice"], value="Text Only")
+            new_bot_token = gr.Textbox(label="Bot Token", type="password", placeholder="123456789:ABCdef...")
+            new_bot_user_id = gr.Textbox(label="Allowed User ID", placeholder="Your Telegram user ID")
             
             bot_mgmt_status = gr.Textbox(label="Status", interactive=False)
             
@@ -987,40 +848,38 @@ with gr.Blocks(title="Home Control Center") as demo:
             def _refresh_bot_list():
                 bots = get_bots_config()
                 bot_list = [[name, cfg.get("token", "")[:10]+"..." if cfg.get("token") else "None", 
-                            cfg.get("voice_name", "Pebble"), cfg.get("voice_mode", "Text Only")] 
+                            cfg.get("user_id", "")] 
                            for name, cfg in bots.items()]
                 return gr.Dataframe(value=bot_list), gr.Dropdown(choices=list(bots.keys()))
             
             def _load_bot_for_edit(bot_name: str):
                 """Load bot settings into edit fields."""
                 if not bot_name:
-                    return "", "", "", "Pebble", "Text Only"
+                    return "", ""
                 cfg = get_bot_config(bot_name)
                 if cfg:
                     return (
                         cfg.get("token", ""),
                         cfg.get("user_id", ""),
-                        cfg.get("voice_name", "Pebble"),
-                        cfg.get("voice_mode", "Text Only"),
                     )
-                return "", "", "", "Pebble", "Text Only"
+                return "", ""
             
-            def _add_new_bot(name: str, token: str, user_id: str, voice: str, mode: str):
+            def _add_new_bot(name: str, token: str, user_id: str):
                 """Add a new bot."""
                 if not name or not name.strip():
                     return "❌ Bot name is required.", *list(_refresh_bot_list())
-                if add_bot(name.strip(), token, user_id, voice, mode):
-                    # Update global BOT_PROFILES
+                # Add with default voice settings
+                if add_bot(name.strip(), token, user_id, "Pebble", "Text Only"):
                     global BOT_PROFILES
                     BOT_PROFILES = _load_bot_profiles()
-                    return f"✅ Bot '{name}' added!", *list(_refresh_bot_list())
+                    return f"✅ Bot '{name}' added! Configure voice in Telegram Bot tab.", *list(_refresh_bot_list())
                 return f"❌ Bot '{name}' already exists.", *list(_refresh_bot_list())
             
-            def _update_existing_bot(name: str, token: str, user_id: str, voice: str, mode: str):
-                """Update an existing bot."""
+            def _update_existing_bot(name: str, token: str, user_id: str):
+                """Update an existing bot's token and user_id only."""
                 if not name or not name.strip():
                     return "❌ Select a bot to update.", *list(_refresh_bot_list())
-                if update_bot(name.strip(), token, user_id, voice, mode):
+                if update_bot(name.strip(), token=token, user_id=user_id):
                     global BOT_PROFILES
                     BOT_PROFILES = _load_bot_profiles()
                     return f"✅ Bot '{name}' updated!", *list(_refresh_bot_list())
@@ -1042,18 +901,18 @@ with gr.Blocks(title="Home Control Center") as demo:
             edit_bot_dropdown.change(
                 _load_bot_for_edit,
                 inputs=[edit_bot_dropdown],
-                outputs=[new_bot_token, new_bot_user_id, new_bot_voice, new_bot_mode],
+                outputs=[new_bot_token, new_bot_user_id],
             )
             
             add_bot_btn.click(
                 _add_new_bot,
-                inputs=[new_bot_name, new_bot_token, new_bot_user_id, new_bot_voice, new_bot_mode],
+                inputs=[new_bot_name, new_bot_token, new_bot_user_id],
                 outputs=[bot_mgmt_status, bot_list_display, edit_bot_dropdown],
             )
             
             update_bot_btn.click(
                 _update_existing_bot,
-                inputs=[edit_bot_dropdown, new_bot_token, new_bot_user_id, new_bot_voice, new_bot_mode],
+                inputs=[edit_bot_dropdown, new_bot_token, new_bot_user_id],
                 outputs=[bot_mgmt_status, bot_list_display, edit_bot_dropdown],
             )
             
@@ -1273,6 +1132,140 @@ with gr.Blocks(title="Home Control Center") as demo:
                 _save_web_search_setting,
                 inputs=[web_search_toggle],
                 outputs=[web_search_status],
+            )
+
+        with gr.TabItem("Control Center"):
+            with gr.Row():
+                with gr.Column():
+                    brain_status = gr.Textbox(label="Brain Status", interactive=False)
+                    with gr.Row():
+                        start_brain_btn = gr.Button("Start Brain")
+                        stop_brain_btn = gr.Button("Stop Brain")
+
+                with gr.Column():
+                    senses_status = gr.Textbox(label="Senses Status", interactive=False)
+                    with gr.Row():
+                        start_senses_btn = gr.Button("Start Senses")
+                        stop_senses_btn = gr.Button("Stop Senses")
+
+                with gr.Column():
+                    bot_status = gr.Textbox(label="Bot Status", interactive=False)
+                    with gr.Row():
+                        start_bot_btn = gr.Button("Start Bot")
+                        stop_bot_btn = gr.Button("Stop Bot")
+
+            with gr.Row():
+                start_all_btn = gr.Button("Start All", variant="primary")
+                stop_all_btn = gr.Button("Stop All", variant="stop")
+                refresh_btn = gr.Button("Refresh Status")
+
+            with gr.Accordion("Logs (latest 50 lines)", open=False):
+                brain_log = gr.Textbox(label="Brain Log", lines=10, interactive=False)
+                senses_log = gr.Textbox(label="Senses Log", lines=10, interactive=False)
+                bot_log = gr.Textbox(label="Bot Log", lines=10, interactive=False)
+
+        with gr.TabItem("Home Mode Chat"):
+            profile = gr.Dropdown(label="Bot Profile", choices=list(BOT_PROFILES.keys()), value=ACTIVE_BOT_NAME)
+            voice_toggle = gr.Radio(label="Voice Reply", choices=["Off", "On"], value="Off")
+            chat = gr.Chatbot(label="Chat", height=340)
+            state = gr.State([])
+            status = gr.Textbox(label="Status", interactive=False)
+            with gr.Row():
+                chat_in = gr.Textbox(label="Type message", lines=2)
+                send_btn = gr.Button("Send")
+                clear_btn = gr.Button("Clear")
+            voice_out = gr.Audio(label="Voice Reply File", autoplay=True)
+            gr.Markdown("### Audio File Input")
+            audio_in = gr.Audio(label="Upload or record audio", sources=["upload", "microphone"], type="filepath")
+            send_audio_btn = gr.Button("Send Audio")
+            gr.Markdown("If microphone is unavailable, upload an audio file and Pebble will still respond.")
+
+        with gr.TabItem("Call Mode (Hands-Free MVP)"):
+            call_profile = gr.Dropdown(label="Bot Profile", choices=list(BOT_PROFILES.keys()), value=ACTIVE_BOT_NAME)
+            call_on = gr.Checkbox(label="Call Mode On", value=False)
+            call_state = gr.Textbox(label="Call State", value="Idle", interactive=False)
+            call_status = gr.Textbox(label="Call Status", interactive=False)
+            noise_threshold = gr.Slider(0.005, 0.08, value=0.015, step=0.001, label="Noise Threshold")
+            noise_clip = gr.Audio(label="Noise Sample (2 sec room tone)", sources=["microphone", "upload"], type="filepath")
+            calibrate_btn = gr.Button("Calibrate Background Noise")
+            call_audio_in = gr.Audio(label="Speak (record and submit segment)", sources=["microphone", "upload"], type="filepath")
+            process_turn_btn = gr.Button("Process Turn")
+            call_chat = gr.Chatbot(label="Call Transcript", height=260)
+            call_chat_state = gr.State([])
+            call_voice_out = gr.Audio(label="Pebble Voice Reply", autoplay=True)
+            gr.Markdown("If browser says no microphone found, use uploaded clips until mic permission is enabled.")
+
+        with gr.TabItem("Telegram Bot"):
+            gr.Markdown("### Telegram Bot Voice Settings")
+            gr.Markdown("Select a bot and configure its voice settings.")
+            
+            # Bot selector
+            bot_names = get_bot_names()
+            selected_bot = gr.Dropdown(
+                label="Select Bot",
+                choices=bot_names,
+                value=bot_names[0] if bot_names else "Pebble",
+            )
+            
+            # Load settings for selected bot
+            def _get_bot_voice_settings(bot_name: str) -> Tuple[str, str]:
+                """Get voice settings for a specific bot."""
+                bot_config = get_bot_config(bot_name)
+                if bot_config:
+                    return (
+                        bot_config.get("voice_name", "Pebble"),
+                        bot_config.get("voice_mode", "Text Only"),
+                    )
+                return "Pebble", "Text Only"
+            
+            initial_voice, initial_mode = _get_bot_voice_settings(bot_names[0] if bot_names else "Pebble")
+            
+            with gr.Row():
+                telegram_voice_dropdown = gr.Dropdown(
+                    label="Voice",
+                    choices=VOICE_NAMES,
+                    value=initial_voice,
+                )
+                telegram_mode_radio = gr.Radio(
+                    label="Reply Mode",
+                    choices=["Text Only", "Text + Voice"],
+                    value=initial_mode,
+                )
+            
+            save_telegram_btn = gr.Button("Save Settings", variant="primary")
+            telegram_status = gr.Textbox(label="Status", interactive=False)
+            
+            gr.Markdown("---")
+            gr.Markdown("**Current Settings:**")
+            current_settings_display = gr.Textbox(
+                label="",
+                value=f"Voice: {initial_voice} | Mode: {initial_mode}",
+                interactive=False,
+            )
+            
+            # Bot selector change handler - load bot's settings
+            def _on_bot_select(bot_name: str) -> Tuple[str, str, str]:
+                voice, mode = _get_bot_voice_settings(bot_name)
+                display = f"Voice: {voice} | Mode: {mode}"
+                return voice, mode, display
+            
+            selected_bot.change(
+                _on_bot_select,
+                inputs=[selected_bot],
+                outputs=[telegram_voice_dropdown, telegram_mode_radio, current_settings_display],
+            )
+            
+            # Save handler - save to bots_config.json
+            def _save_bot_voice_settings(bot_name: str, voice: str, mode: str) -> Tuple[str, str]:
+                """Save voice settings for a specific bot."""
+                update_bot(bot_name, voice_name=voice, voice_mode=mode)
+                display = f"Voice: {voice} | Mode: {mode}"
+                return f"✅ Saved! Bot: {bot_name}, Voice: {voice}, Mode: {mode}", display
+            
+            save_telegram_btn.click(
+                _save_bot_voice_settings,
+                inputs=[selected_bot, telegram_voice_dropdown, telegram_mode_radio],
+                outputs=[telegram_status, current_settings_display],
             )
 
     outputs = [brain_status, senses_status, bot_status, brain_log, senses_log, bot_log]
