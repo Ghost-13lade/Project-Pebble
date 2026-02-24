@@ -944,30 +944,123 @@ with gr.Blocks(title="Home Control Center") as demo:
                 outputs=[mlx_status],
             )
             
-            # --- Telegram Configuration Section ---
-            gr.Markdown("---\n#### 📱 Telegram Bot Configuration")
-            gr.Markdown("Configure your Telegram bot token and allowed user ID.")
+            # --- Telegram Bot Management Section ---
+            gr.Markdown("---\n#### 📱 Telegram Bot Management")
+            gr.Markdown("Add and manage multiple Telegram bots, each with their own voice settings.")
             
-            current_token, current_user_id = _get_current_telegram_settings()
+            # Bot list display
+            bots = get_bots_config()
+            bot_list_data = [[name, cfg.get("token", "")[:10]+"...", cfg.get("voice_name", "Pebble"), cfg.get("voice_mode", "Text Only")] 
+                             for name, cfg in bots.items()]
             
-            telegram_token_input = gr.Textbox(
-                label="Bot Token",
-                value=current_token,
-                type="password",
-                placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz",
-            )
-            allowed_user_input = gr.Textbox(
-                label="Allowed User ID",
-                value=current_user_id,
-                placeholder="Your Telegram user ID (numbers only)",
+            bot_list_display = gr.Dataframe(
+                headers=["Bot Name", "Token", "Voice", "Mode"],
+                value=bot_list_data,
+                label="Configured Bots",
+                interactive=False,
             )
             
-            telegram_config_status = gr.Textbox(label="Status", interactive=False)
-            save_telegram_config_btn = gr.Button("Save Telegram Settings", variant="primary")
-            save_telegram_config_btn.click(
-                _save_telegram_bot_settings,
-                inputs=[telegram_token_input, allowed_user_input],
-                outputs=[telegram_config_status],
+            with gr.Row():
+                refresh_bots_btn = gr.Button("🔄 Refresh List", size="sm")
+            
+            gr.Markdown("##### Add/Edit Bot")
+            
+            with gr.Row():
+                new_bot_name = gr.Textbox(label="Bot Name", placeholder="e.g., Pebble, Brook, Assistant")
+                edit_bot_dropdown = gr.Dropdown(label="Or Select to Edit", choices=get_bot_names(), value=None)
+            
+            with gr.Row():
+                new_bot_token = gr.Textbox(label="Bot Token", type="password", placeholder="123456789:ABCdef...")
+                new_bot_user_id = gr.Textbox(label="Allowed User ID", placeholder="Your Telegram user ID")
+            
+            with gr.Row():
+                new_bot_voice = gr.Dropdown(label="Voice", choices=VOICE_NAMES, value="Pebble")
+                new_bot_mode = gr.Radio(label="Reply Mode", choices=["Text Only", "Text + Voice"], value="Text Only")
+            
+            bot_mgmt_status = gr.Textbox(label="Status", interactive=False)
+            
+            with gr.Row():
+                add_bot_btn = gr.Button("➕ Add Bot", variant="primary")
+                update_bot_btn = gr.Button("💾 Update Bot")
+                delete_bot_btn = gr.Button("🗑️ Delete Bot", variant="stop")
+            
+            def _refresh_bot_list():
+                bots = get_bots_config()
+                bot_list = [[name, cfg.get("token", "")[:10]+"..." if cfg.get("token") else "None", 
+                            cfg.get("voice_name", "Pebble"), cfg.get("voice_mode", "Text Only")] 
+                           for name, cfg in bots.items()]
+                return gr.Dataframe(value=bot_list), gr.Dropdown(choices=list(bots.keys()))
+            
+            def _load_bot_for_edit(bot_name: str):
+                """Load bot settings into edit fields."""
+                if not bot_name:
+                    return "", "", "", "Pebble", "Text Only"
+                cfg = get_bot_config(bot_name)
+                if cfg:
+                    return (
+                        cfg.get("token", ""),
+                        cfg.get("user_id", ""),
+                        cfg.get("voice_name", "Pebble"),
+                        cfg.get("voice_mode", "Text Only"),
+                    )
+                return "", "", "", "Pebble", "Text Only"
+            
+            def _add_new_bot(name: str, token: str, user_id: str, voice: str, mode: str):
+                """Add a new bot."""
+                if not name or not name.strip():
+                    return "❌ Bot name is required.", *list(_refresh_bot_list())
+                if add_bot(name.strip(), token, user_id, voice, mode):
+                    # Update global BOT_PROFILES
+                    global BOT_PROFILES
+                    BOT_PROFILES = _load_bot_profiles()
+                    return f"✅ Bot '{name}' added!", *list(_refresh_bot_list())
+                return f"❌ Bot '{name}' already exists.", *list(_refresh_bot_list())
+            
+            def _update_existing_bot(name: str, token: str, user_id: str, voice: str, mode: str):
+                """Update an existing bot."""
+                if not name or not name.strip():
+                    return "❌ Select a bot to update.", *list(_refresh_bot_list())
+                if update_bot(name.strip(), token, user_id, voice, mode):
+                    global BOT_PROFILES
+                    BOT_PROFILES = _load_bot_profiles()
+                    return f"✅ Bot '{name}' updated!", *list(_refresh_bot_list())
+                return f"❌ Bot '{name}' not found.", *list(_refresh_bot_list())
+            
+            def _delete_existing_bot(name: str):
+                """Delete a bot."""
+                if not name or not name.strip():
+                    return "❌ Select a bot to delete.", *list(_refresh_bot_list())
+                if delete_bot(name.strip()):
+                    global BOT_PROFILES
+                    BOT_PROFILES = _load_bot_profiles()
+                    return f"✅ Bot '{name}' deleted!", *list(_refresh_bot_list())
+                return f"❌ Bot '{name}' not found.", *list(_refresh_bot_list())
+            
+            # Event handlers
+            refresh_bots_btn.click(_refresh_bot_list, outputs=[bot_list_display, edit_bot_dropdown])
+            
+            edit_bot_dropdown.change(
+                _load_bot_for_edit,
+                inputs=[edit_bot_dropdown],
+                outputs=[new_bot_token, new_bot_user_id, new_bot_voice, new_bot_mode],
+            )
+            
+            add_bot_btn.click(
+                _add_new_bot,
+                inputs=[new_bot_name, new_bot_token, new_bot_user_id, new_bot_voice, new_bot_mode],
+                outputs=[bot_mgmt_status, bot_list_display, edit_bot_dropdown],
+            )
+            
+            update_bot_btn.click(
+                _update_existing_bot,
+                inputs=[edit_bot_dropdown, new_bot_token, new_bot_user_id, new_bot_voice, new_bot_mode],
+                outputs=[bot_mgmt_status, bot_list_display, edit_bot_dropdown],
+            )
+            
+            delete_bot_btn.click(
+                _delete_existing_bot,
+                inputs=[edit_bot_dropdown],
+                outputs=[bot_mgmt_status, bot_list_display, edit_bot_dropdown],
             )
             
             # --- Personality Section ---
