@@ -47,6 +47,12 @@ PROVIDER_PRESETS = {
         "model": "gpt-4o-mini",
         "requires_mlx": False,
     },
+    "Mistral": {
+        "base_url": "https://api.mistral.ai/v1",
+        "api_key": "",
+        "model": "mistral-small-latest",
+        "requires_mlx": False,
+    },
     "LM Studio": {
         "base_url": "http://localhost:1234/v1",
         "api_key": "lm-studio",
@@ -365,6 +371,57 @@ def resolve_mlx_model_path() -> str:
     
     # Fall back to direct path or HF ID
     return get_mlx_model_path()
+
+
+def fetch_provider_models(provider: str, api_key: str = "") -> List[str]:
+    """
+    Fetch available models from a provider's API.
+    Returns a list of model names.
+    """
+    import httpx
+    
+    preset = PROVIDER_PRESETS.get(provider, {})
+    base_url = preset.get("base_url", "")
+    
+    if not base_url:
+        return []
+    
+    # Use provided API key or fall back to saved key
+    key = api_key or get_api_key()
+    if not key:
+        return []
+    
+    headers = {"Authorization": f"Bearer {key}"}
+    
+    # Provider-specific endpoints
+    endpoints = {
+        "OpenAI": "/models",
+        "OpenRouter": "/models",
+        "Mistral": "/models",
+        "LM Studio": "/models",
+        "Ollama": "/api/tags",  # Different endpoint for Ollama
+    }
+    
+    endpoint = endpoints.get(provider, "/models")
+    url = base_url.rstrip("/") + endpoint
+    
+    try:
+        if provider == "Ollama":
+            # Ollama uses different response format
+            response = httpx.get(url, timeout=10.0)
+            if response.status_code == 200:
+                data = response.json()
+                return [m.get("name", "") for m in data.get("models", [])]
+        else:
+            # OpenAI-compatible APIs
+            response = httpx.get(url, headers=headers, timeout=10.0)
+            if response.status_code == 200:
+                data = response.json()
+                return [m.get("id", "") for m in data.get("data", [])]
+    except Exception as e:
+        print(f"[Config] Failed to fetch models for {provider}: {e}")
+    
+    return []
 
 
 # =============================================================================

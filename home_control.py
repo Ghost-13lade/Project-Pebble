@@ -48,6 +48,7 @@ from config import (
     get_mlx_selected_model,
     get_mlx_context_size,
     save_mlx_config,
+    fetch_provider_models,
     resolve_mlx_model_path,
 )
 from db import (
@@ -259,6 +260,14 @@ def _service_status(name: str) -> str:
     if name == "brain":
         if is_starting:
             return "Brain: STARTING... | PID: - | API: WAIT"
+        
+        # Check if using cloud provider (no local server needed)
+        provider = get_provider()
+        if provider != "Local MLX":
+            # Cloud provider - show status without checking localhost
+            return f"Brain: READY | PID: - | API: {provider} (Cloud)"
+        
+        # Local MLX - check the actual server
         pid = _read_pid(SERVICES["brain"]["pid"])
         running = _pid_running(pid)
         return f"Brain: {'RUNNING' if running else 'STOPPED'} | PID: {pid or '-'} | API: {'OK' if _check_brain_health() else 'DOWN'}"
@@ -369,66 +378,55 @@ def _start_service(name: str) -> None:
         log_file: Path = spec["log"]  # type: ignore[assignment]
         cmd: list[str] = spec["cmd"]  # type: ignore[assignment]
         env_add: dict[str, str] = spec["env"]  # type: ignore[assignment]
-        
-        # Build brain command dynamically for Local MLX
-        if name == "brain" and get_provider() == "Local MLX":
-            # CRITICAL: Reload environment to get latest settings from .env
-            reload_env()
-            
-            mlx_model_path = resolve_mlx_model_path()
-            mlx_kv_bits = get_mlx_kv_bits()
-            mlx_context_size = get_mlx_context_size()
 
-            # REPLACEMENT CODE FOR BRAIN STARTUP:
-            # Note: mlx_lm.server doesn't support --kv-bits flag
-            cmd = [
-                sys.executable, "-m", "mlx_lm.server",
-                "--model", mlx_model_path,
-                "--port", "8080"
-            ]
+        # Handle Brain specially - only start for Local MLX
+        if name == "brain":
+            if get_provider() == "Local MLX":
+                # Local MLX needs the mlx_lm.server
+                reload_env()
+                mlx_model_path = resolve_mlx_model_path()
+                mlx_kv_bits = get_mlx_kv_bits()
+                mlx_context_size = get_mlx_context_size()
+                
+                cmd = [
+                    sys.executable, "-m", "mlx_lm.server",
+                    "--model", mlx_model_path,
+                    "--port", "8080"
+                ]
+                
+                print(f"Starting Brain with command: {' '.join(cmd)}")
+                
+                log_file = SERVICES["brain"]["log"]
+                with open(log_file, "a", buffering=1) as lf:
+                    lf.write(f"\n--- Starting Brain ---\n")
+                    lf.write(f"Command: {' '.join(cmd)}\n")
+                    lf.write(f"Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                
+                env = os.environ.copy()
+                if mlx_context_size:
+                    env["MLX_CONTEXT_SIZE"] = str(mlx_context_size)
+                if mlx_kv_bits:
+                    env["MLX_KV_BITS"] = str(mlx_kv_bits)
+                
+                proc = subprocess.Popen(
+                    cmd,
+                    stdout=open(log_file, "a"),
+                    stderr=subprocess.STDOUT,
+                    cwd=os.getcwd(),
+                    env=env,
+                    start_new_session=True,
+                )
+                
+                pid_file = SERVICES["brain"]["pid"]
+                _write_pid(pid_file, proc.pid)
+                print(f"[Service] Brain started with PID {proc.pid}")
+                return
+            else:
+                # Cloud provider - no brain server needed, just return success
+                print(f"[Service] Brain uses cloud API ({get_provider()}), no local server needed")
+                return
 
-            # KV Bit Quantization is NOT supported via CLI for mlx_lm.server
-            # It's handled internally by mlx_lm when loading the model
-
-            # Log the exact command so we can see it in the terminal
-            print(f"Starting Brain with command: {' '.join(cmd)}")
-            print(f"Settings - Model: {mlx_model_path}, KV Bits: {mlx_kv_bits}, Context: {mlx_context_size}")
-
-            # Write to log file
-            log_file = SERVICES["brain"]["log"]
-            with open(log_file, "a", buffering=1) as lf:
-                lf.write(f"\n--- Starting Brain ---\n")
-                lf.write(f"Command: {' '.join(cmd)}\n")
-                lf.write(f"Settings - Model: {mlx_model_path}, KV Bits: {mlx_kv_bits}, Context: {mlx_context_size}\n")
-                lf.write(f"Time: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                lf.write(f"-----------------------\n")
-
-            # Start the process with proper subprocess.Popen
-            # Pass context size and KV bits as environment variables
-            env = os.environ.copy()
-            if mlx_context_size:
-                env["MLX_CONTEXT_SIZE"] = str(mlx_context_size)
-            if mlx_kv_bits:
-                env["MLX_KV_BITS"] = str(mlx_kv_bits)
-            
-            proc = subprocess.Popen(
-                cmd,
-                stdout=open(log_file, "a"),
-                stderr=subprocess.STDOUT,
-                cwd=os.getcwd(),
-                env=env,
-                start_new_session=True,
-            )
-
-            # Write PID to file
-            pid_file = SERVICES["brain"]["pid"]
-            _write_pid(pid_file, proc.pid)
-            print(f"[Service] Brain started with PID {proc.pid}")
-
-            # Return early since we're handling the process manually
-            return
-        
-        # Standard service startup for non-Local MLX
+        # Standard service startup for senses/bot
         if _pid_running(_read_pid(pid_file)):
             return
         with open(log_file, "a", buffering=1) as lf:
@@ -871,12 +869,16 @@ with gr.Blocks(title="Home Control Center") as demo:
                     value=current_base_url,
                     placeholder="https://api.example.com/v1",
                 )
-                model_input = gr.Textbox(
+                model_input = gr.Dropdown(
                     label="Model Name",
+                    choices=[current_model] if current_model else [],
                     value=current_model,
-                    placeholder="gpt-4o-mini, llama3.2, etc.",
+                    info="Click Fetch Models to populate, or type custom model",
+                    interactive=True,
+                    allow_custom_value=True,
                 )
                 
+                refresh_models_btn = gr.Button("🔄 Fetch Models from API", size="sm")
                 llm_status = gr.Textbox(label="Status", interactive=False)
                 save_llm_btn = gr.Button("Save LLM Settings", variant="primary")
             
@@ -946,6 +948,23 @@ with gr.Blocks(title="Home Control Center") as demo:
                 _save_llm_settings,
                 inputs=[provider_dropdown, api_key_input, base_url_input, model_input],
                 outputs=[llm_status],
+            )
+            
+            # Fetch models from API handler
+            def _fetch_models(provider: str, api_key: str):
+                """Fetch available models from the provider's API."""
+                if not api_key or api_key == "YOUR_KEY_HERE":
+                    return gr.Dropdown(choices=[]), "⚠️ Please enter your API key first"
+                models = fetch_provider_models(provider, api_key)
+                if models:
+                    # Return dropdown with choices and first model as value
+                    return gr.Dropdown(choices=models, value=models[0]), f"✅ Found {len(models)} models! Select from dropdown."
+                return gr.Dropdown(choices=[]), "⚠️ No models found. Check API key."
+            
+            refresh_models_btn.click(
+                _fetch_models,
+                inputs=[provider_dropdown, api_key_input],
+                outputs=[model_input, llm_status],
             )
             
             # Native folder picker handler
